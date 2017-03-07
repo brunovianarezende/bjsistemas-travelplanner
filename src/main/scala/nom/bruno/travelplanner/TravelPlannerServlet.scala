@@ -1,16 +1,21 @@
 package nom.bruno.travelplanner
 
-import org.scalatra._
+case class Flower(slug: String, name: String)
+
+object FlowerData {
+
+  /**
+    * Some fake flowers data so we can simulate retrievals.
+    */
+  var all = List(
+    Flower("yellow-tulip", "Yellow Tulip"),
+    Flower("red-rose", "Red Rose"),
+    Flower("black-rose", "Black Rose"))
+}
 
 class TravelPlannerServlet extends TravelPlannerStack {
-
   get("/") {
-    <html>
-      <body>
-        <h1>Hello, world!</h1>
-        Say <a href="hello-scalate">hello to Scalate</a>.
-      </body>
-    </html>
+    FlowerData.all
   }
 
 }
