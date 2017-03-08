@@ -1,21 +1,19 @@
 package nom.bruno.travelplanner
 
-case class Flower(slug: String, name: String)
+import org.scalatra.AsyncResult
+import slick.jdbc.JdbcBackend.Database
+import slick.lifted.TableQuery
+import slick.jdbc.MySQLProfile.api._
 
-object FlowerData {
-
-  /**
-    * Some fake flowers data so we can simulate retrievals.
-    */
-  var all = List(
-    Flower("yellow-tulip", "Yellow Tulip"),
-    Flower("red-rose", "Red Rose"),
-    Flower("black-rose", "Black Rose"))
-}
-
-class TravelPlannerServlet extends TravelPlannerStack {
+class TravelPlannerServlet(val db: Database) extends TravelPlannerStack {
   get("/") {
-    FlowerData.all
+    new AsyncResult {
+      val is = {
+        val users = TableQuery[Tables.Users]
+        db.run(users.length.result)
+          .map(total => Map("numUsers" -> total))
+      }
+    }
   }
 
 }
