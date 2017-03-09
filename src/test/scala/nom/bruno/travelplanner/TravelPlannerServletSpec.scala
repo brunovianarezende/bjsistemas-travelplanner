@@ -8,7 +8,7 @@ class TravelPlannerServletSpec extends ScalatraSpec { def is =
     "should return status 200"                  ! root200^
                                                 end
 
-  addServlet(classOf[TravelPlannerServlet], "/*")
+  addServlet(classOf[UsersServlet], "/users/*")
 
   def root200 = get("/") {
     status must_== 200

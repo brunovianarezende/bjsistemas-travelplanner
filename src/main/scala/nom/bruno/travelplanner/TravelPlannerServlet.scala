@@ -1,19 +1,17 @@
 package nom.bruno.travelplanner
 
-import org.scalatra.AsyncResult
-import slick.jdbc.JdbcBackend.Database
-import slick.lifted.TableQuery
-import slick.jdbc.MySQLProfile.api._
+import org.scalatra._
+import org.scalatra.json._
+import org.json4s.{DefaultFormats, Formats}
 
-class TravelPlannerServlet(val db: Database) extends TravelPlannerStack {
-  get("/") {
-    new AsyncResult {
-      val is = {
-        val users = TableQuery[Tables.Users]
-        db.run(users.length.result)
-          .map(total => Map("numUsers" -> total))
-      }
-    }
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+
+trait TravelPlannerServlet extends ScalatraServlet with JacksonJsonSupport with FutureSupport {
+  protected implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
+  protected implicit def executor: ExecutionContext =  global
+
+  before() {
+    contentType = formats("json")
   }
-
 }

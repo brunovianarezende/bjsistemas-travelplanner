@@ -13,7 +13,7 @@ class ScalatraBootstrap extends LifeCycle {
   override def init(context: ServletContext) {
     logger.info("Creating db connection")
     db = Database.forConfig("mysql")
-    context.mount(new TravelPlannerServlet(db), "/*")
+    context.mount(new UsersServlet(db), "/users/*")
   }
 
   private def closeDbConnection(): Unit = {
