@@ -17,4 +17,15 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet {
     }
   }
 
+  get("/:email") {
+    new AsyncResult {
+      val is = {
+        val users = TableQuery[Tables.Users]
+        db.run(users.filter(_.email === params("email")).result) map (users => {
+          users.map(user => Map("email" -> user.email, "role" -> user.role))
+        })
+      }
+    }
+  }
+
 }
