@@ -13,4 +13,6 @@ object Tables {
     def role = column[String]("role")
     def * = (id.?, email, password, salt, role) <> (User.tupled, User.unapply)
   }
+
+  val users = TableQuery[Users]
 }
