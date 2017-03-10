@@ -1,7 +1,7 @@
 package nom.bruno.travelplanner
 
+import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.{DefaultFormats, _}
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Await
@@ -32,7 +32,7 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
       get("/users") {
         status should equal(200)
 
-        parse(body).extract[List[_]] should be(List())
+        parse(body).extract[Result[List[UserView]]].data should be(Some(List()))
       }
     }
 
@@ -41,12 +41,50 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
         get("/users") {
           status should equal(200)
 
-          parse(body).extract[List[_]] should be(List(
-            Map("email" -> "bla@bla.com", "role" -> "NORMAL"),
-            Map("email" -> "ble@bla.com", "role" -> "NORMAL")
-          ))
+          parse(body).extract[Result[List[UserView]]].data should be(Some(List(
+            UserView("bla@bla.com", "NORMAL"),
+            UserView("ble@bla.com", "NORMAL")
+          )))
         }
       }
     }
+  }
+
+  feature("get one user by email") {
+    scenario("no user in db") {
+      get("/users/bla@bla.com") {
+        status should equal(404)
+        parse(body).extract[Result[UserView]] should have (
+          'success (false),
+          'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+        )
+      }
+    }
+
+    scenario("some users in db - email found") {
+      withUsers {
+        get("/users/bla@bla.com") {
+          status should equal(200)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView("bla@bla.com", "NORMAL")))
+          )
+        }
+      }
+    }
+
+    scenario("some users in db - email not found") {
+      withUsers {
+        get("/users/idontexist@bla.com") {
+          status should equal(404)
+          parse(body).extract[Result[UserView]] should have (
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
+
   }
 }
