@@ -14,11 +14,22 @@ object ErrorCodes {
   val INVALID_TRIP = 9
   val INVALID_ROLE_VALUE = 10
   val INVALID_FIELDS = 11
+  val BAD_SCHEMA = 12
 }
 
 case class Error(code: Int)
 
 case class Result[T](success: Boolean, data: Option[T], errors: Option[List[Error]])
+
+object Ok {
+  def apply() = {
+    s.Ok(Result(true, None, None))
+  }
+
+  def apply(data: Any) = {
+    s.Ok(Result(true, Some(data), None))
+  }
+}
 
 object NotFound {
   def apply(error: Error) = {
@@ -26,8 +37,8 @@ object NotFound {
   }
 }
 
-object Ok {
-  def apply(data: Any) = {
-    s.Ok(Result(true, Some(data), None))
+object BadRequest {
+  def apply(error: Error) = {
+    s.BadRequest(Result(false, None, Some(List(error))))
   }
 }

@@ -11,19 +11,83 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
   addServlet(new UsersServlet(db), "/users/*")
 
   def withUsers(testCode: => Any): Unit = {
-    val insertActions = DBIO.seq(
+    val setupActions = DBIO.seq(
       Tables.users ++= Seq(
         Tables.User(None, "bla@bla.com", "passsword", "salt", "NORMAL"),
         Tables.User(None, "ble@bla.com", "passsword", "salt", "NORMAL")
       )
     )
-    Await.result(db.run(insertActions), Duration.Inf)
+    Await.result(db.run(setupActions), Duration.Inf)
     try {
       testCode
     }
     finally {
-      val deleteActions = DBIO.seq((Tables.users.delete))
-      Await.result(db.run(deleteActions), Duration.Inf)
+      val tearDownActions = DBIO.seq((Tables.users.delete))
+      Await.result(db.run(tearDownActions), Duration.Inf)
+    }
+  }
+
+  feature("add users") {
+    scenario("all ok") {
+      putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
+        status should equal(200)
+        parse(body).extract[Result[_]].success should be (true)
+      }
+    }
+
+    scenario("bad schema") {
+      for(badInput <- List(Map(),
+          List(),
+          (1).asInstanceOf[AnyRef],
+          Map("password" -> "!1APassword"),
+          Map("passwordConfirmation" -> "!1APassword"))) {
+        putAsJson("/users/brunore@email.com", badInput) {
+          status should equal(400)
+          val result = parse(body).extract[Result[_]]
+          result.success should be (false)
+          result.errors.get should be (List(Error(ErrorCodes.BAD_SCHEMA)))
+        }
+      }
+    }
+
+    scenario("invalid password") {
+      putAsJson("/users/brunore@email.com", NewUserData("abc", "abc")) {
+        status should equal(400)
+        val result = parse(body).extract[Result[_]]
+        result.success should be (false)
+        result.errors.get should be (List(Error(ErrorCodes.INVALID_PASSWORD)))
+      }
+    }
+
+    scenario("wrong confirmation") {
+      putAsJson("/users/brunore@email.com", NewUserData("abcdefg", "1234567")) {
+        status should equal(400)
+        val result = parse(body).extract[Result[_]]
+        result.success should be (false)
+        result.errors.get should be (List(Error(ErrorCodes.INVALID_PASSWORD_CONFIRMATION)))
+      }
+    }
+
+    scenario("invalid email") {
+      putAsJson("/users/brunore", NewUserData("apassword", "apassword")) {
+        status should equal(400)
+        val result = parse(body).extract[Result[_]]
+        result.success should be (false)
+        result.errors.get should be (List(Error(ErrorCodes.INVALID_EMAIL)))
+      }
+    }
+
+    scenario("user already registered") {
+      putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
+        status should equal(200)
+        parse(body).extract[Result[_]].success should be (true)
+      }
+      putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
+        status should equal(400)
+        val result = parse(body).extract[Result[_]]
+        result.success should be (false)
+        result.errors.get should be (List(Error(ErrorCodes.USER_ALREADY_REGISTERED)))
+      }
     }
   }
 
