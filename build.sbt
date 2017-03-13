@@ -47,3 +47,5 @@ scalateTemplateConfig in Compile := {
 }
 
 enablePlugins(JettyPlugin)
+
+debugPort in Jetty := 5005
