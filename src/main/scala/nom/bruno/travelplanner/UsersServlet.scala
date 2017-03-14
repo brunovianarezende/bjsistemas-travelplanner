@@ -6,17 +6,13 @@ import slick.jdbc.JdbcBackend.Database
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class UserView(email: String, role: String)
-
-case class NewUserData(password: String, password_confirmation: String)
-
 class UsersServlet(val db: Database) extends TravelPlannerServlet {
   val usersService = new UsersService(db)
   get("/") {
     new AsyncResult {
       val is = {
         usersService.getAllUsers map (users => {
-          Ok(users.map(user => UserView(user.email, user.role)))
+          Ok(users.map(user => UserView(user)))
         })
       }
     }
@@ -26,7 +22,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet {
     new AsyncResult {
       val is = {
         usersService.getUser(params("email")) map {
-          case Some(user) => Ok(UserView(user.email, user.role))
+          case Some(user) => Ok(UserView(user))
           case None => NotFound(Error(ErrorCodes.INVALID_USER))
         }
       }

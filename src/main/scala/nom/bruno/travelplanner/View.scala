@@ -2,6 +2,16 @@ package nom.bruno.travelplanner
 
 import org.{scalatra => s}
 
+case class UserView(email: String, role: String)
+
+object UserView {
+  def apply(user: Tables.User): UserView = {
+    UserView(user.email, user.role)
+  }
+}
+
+case class NewUserData(password: String, password_confirmation: String)
+
 object ErrorCodes {
   val MISSING_FIELDS = 1
   val USER_ALREADY_REGISTERED = 2
