@@ -19,14 +19,14 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-    val schema = Tables.users.schema
-    Await.result(db.run(DBIO.seq(schema.create)), Duration.Inf)
+//    val schema = Tables.users.schema
+//    Await.result(db.run(DBIO.seq(schema.create)), Duration.Inf)
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-    val schema = Tables.users.schema
-    Await.result(db.run(DBIO.seq(schema.drop)), Duration.Inf)
+//    val schema = Tables.users.schema
+//    Await.result(db.run(DBIO.seq(schema.drop)), Duration.Inf)
     db.close()
   }
 
