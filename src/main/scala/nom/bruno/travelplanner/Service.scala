@@ -10,7 +10,7 @@ import slick.jdbc.MySQLProfile.api._
 class UsersService(val db: Database) {
   def getAllUsers: Future[Seq[User]] = db.run(Tables.users.result)
 
-  def getUser(email: String): Future[Seq[User]] = db.run(Tables.users.filter(_.email === email).result)
+  def getUser(email: String): Future[Option[User]] = db.run(Tables.users.filter(_.email === email).result.headOption)
 
   def validateNewUser(email: String, newUserData: NewUserData): Future[Either[Error, Tables.User]] = {
     if (!validateEmail(email)) {
