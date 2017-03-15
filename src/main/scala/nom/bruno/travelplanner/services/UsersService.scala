@@ -1,14 +1,13 @@
 package nom.bruno.travelplanner.services
 
-import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.{Error, ErrorCodes, NewUserData, Tables}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
+import nom.bruno.travelplanner.Tables.User
+import nom.bruno.travelplanner.{Error, ErrorCodes, NewUserData, Tables}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class UsersService(val db: Database) {
+class UsersService(val db: Database)(implicit val executionContext: ExecutionContext) {
   def getAllUsers: Future[Seq[User]] = db.run(Tables.users.result)
 
   def getUser(email: String): Future[Option[User]] = db.run(Tables.users.filter(_.email === email).result.headOption)

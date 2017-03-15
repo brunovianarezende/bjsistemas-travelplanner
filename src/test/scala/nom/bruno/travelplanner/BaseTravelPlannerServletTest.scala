@@ -19,14 +19,12 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-//    val schema = Tables.users.schema
-//    Await.result(db.run(DBIO.seq(schema.create)), Duration.Inf)
+//    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-//    val schema = Tables.users.schema
-//    Await.result(db.run(DBIO.seq(schema.drop)), Duration.Inf)
+//    Await.result(db.run(DBIO.seq(Tables.fullSchema.drop)), Duration.Inf)
     db.close()
   }
 
@@ -37,7 +35,15 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
   }
 
   def putAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    put[A](uri, write(body).getBytes("UTF-8"), headers){f}
+    put[A](uri, jsonBytes(body), headers){f}
+  }
+
+  private[this] def jsonBytes[B <: AnyRef, A](body: B) = {
+    write(body).getBytes("UTF-8")
+  }
+
+  def postAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
+    post[A](uri, write(body).getBytes("UTF-8"), headers){f}
   }
 
 }

@@ -2,16 +2,6 @@ package nom.bruno.travelplanner
 
 import org.{scalatra => s}
 
-case class UserView(email: String, role: String)
-
-object UserView {
-  def apply(user: Tables.User): UserView = {
-    UserView(user.email, user.role)
-  }
-}
-
-case class NewUserData(password: String, password_confirmation: String)
-
 object ErrorCodes {
   val MISSING_FIELDS = 1
   val USER_ALREADY_REGISTERED = 2
@@ -50,5 +40,11 @@ object NotFound {
 object BadRequest {
   def apply(error: Error) = {
     s.BadRequest(Result(false, None, Some(List(error))))
+  }
+}
+
+object Unauthorized {
+  def apply(error: Error) = {
+    s.Unauthorized(Result(false, None, Some(List(error))))
   }
 }

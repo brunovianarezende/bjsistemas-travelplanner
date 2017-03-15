@@ -7,14 +7,24 @@ import org.apache.commons.codec.binary.Hex
 import slick.jdbc.MySQLProfile.api._
 
 object Tables {
-  case class User(id: Option[Int], email: String, password: String, salt: String, role: String)
 
-  class Users(tag: Tag) extends Table[User] (tag, "user") {
+  case class User(id: Option[Int], email: String, password: String, salt: String, role: String) {
+    def checkPassword(otherPassword: String): Boolean = {
+      password == User.applySalt(otherPassword, salt)
+    }
+  }
+
+  class Users(tag: Tag) extends Table[User](tag, "user") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+
     def email = column[String]("email", O.Unique, O.Length(120))
+
     def password = column[String]("password", O.Length(40))
+
     def salt = column[String]("salt", O.Length(32))
+
     def role = column[String]("role")
+
     def * = (id.?, email, password, salt, role) <> (User.tupled, User.unapply)
   }
 
@@ -43,4 +53,31 @@ object Tables {
 
     def tupled = (User.apply _).tupled
   }
+
+  case class Session(sessionId: String, userId: Int)
+
+  class Sessions(tag: Tag) extends Table[Session](tag, "sessions") {
+    def sessionId = column[String]("sessionid", O.PrimaryKey)
+
+    def userId = column[Int]("userid")
+
+    def user = foreignKey("USR_FK", userId, users)(_.id, onDelete = ForeignKeyAction.Cascade)
+
+    def * = (sessionId, userId) <> (Session.tupled, Session.unapply)
+  }
+
+  val sessions = TableQuery[Sessions]
+
+  object Session {
+    def createNewForUser(user: User): Session = {
+      val uuid = UUID.randomUUID()
+      val sessionId = uuid.toString().replace("-", "")
+      Session(sessionId, user.id.get)
+    }
+
+    def tupled = (Session.apply _).tupled
+  }
+
+
+  lazy val fullSchema = users.schema ++ sessions.schema
 }
