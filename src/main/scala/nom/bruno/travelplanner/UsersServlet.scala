@@ -1,5 +1,6 @@
 package nom.bruno.travelplanner
 
+import nom.bruno.travelplanner.services.UsersService
 import org.scalatra.AsyncResult
 import slick.jdbc.JdbcBackend.Database
 
