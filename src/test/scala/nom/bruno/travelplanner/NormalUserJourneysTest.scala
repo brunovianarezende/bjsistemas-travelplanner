@@ -8,10 +8,6 @@ import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen
 
 class NormalUserJourneysTest extends BaseTravelPlannerServletTest with GivenWhenThen {
-  addServlet(new UsersServlet(db), "/users/*")
-  addServlet(new LoginServlet(db), "/login")
-  addServlet(new LogoutServlet(db), "/logout")
-
   feature("user journey") {
     scenario("login, get users, logout, get users again") {
       val email = "brunore@email.com"

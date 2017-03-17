@@ -11,7 +11,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class UsersServletTests extends BaseTravelPlannerServletTest {
-  addServlet(new UsersServlet(db), "/users/*")
   val X_SESSION_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   val AUTH_HEADER = Map("Cookie" -> s"X-Session-Id=$X_SESSION_ID")
 

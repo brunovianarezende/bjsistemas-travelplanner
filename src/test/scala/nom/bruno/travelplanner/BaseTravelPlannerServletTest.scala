@@ -1,15 +1,16 @@
 package nom.bruno.travelplanner
 
-import org.json4s.{DefaultFormats, Formats}
+import nom.bruno.travelplanner.servlets.TravelPlannerServlet
 import org.json4s.jackson.Serialization.write
+import org.json4s.{DefaultFormats, Formats}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
-import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.JdbcBackend.Database
+import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
   protected implicit def executor: ExecutionContext = global
@@ -17,14 +18,19 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
   implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
   lazy val db = Database.forConfig("mysql")
 
+  for {
+    (servlet, path) <- TravelPlannerServlet.servletInstances(db)
+  } addServlet(servlet, path)
+
+
   override protected def beforeAll(): Unit = {
     super.beforeAll()
-//    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
+    //    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
   }
 
   override protected def afterAll(): Unit = {
     super.afterAll()
-//    Await.result(db.run(DBIO.seq(Tables.fullSchema.drop)), Duration.Inf)
+    //    Await.result(db.run(DBIO.seq(Tables.fullSchema.drop)), Duration.Inf)
     db.close()
   }
 
@@ -35,7 +41,9 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
   }
 
   def putAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    put[A](uri, jsonBytes(body), headers){f}
+    put[A](uri, jsonBytes(body), headers) {
+      f
+    }
   }
 
   private[this] def jsonBytes[B <: AnyRef, A](body: B) = {
@@ -43,7 +51,8 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
   }
 
   def postAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    post[A](uri, write(body).getBytes("UTF-8"), headers){f}
+    post[A](uri, write(body).getBytes("UTF-8"), headers) {
+      f
+    }
   }
-
 }

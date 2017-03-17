@@ -10,8 +10,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class LoginServletTests extends BaseTravelPlannerServletTest {
-  addServlet(new LoginServlet(db), "/login")
-
   def withUsers(testCode: => Any): Unit = {
     val setupActions = DBIO.seq(
       Tables.users ++= Seq(

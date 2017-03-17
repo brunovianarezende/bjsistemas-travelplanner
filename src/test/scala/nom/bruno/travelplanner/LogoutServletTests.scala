@@ -9,7 +9,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class LogoutServletTests extends BaseTravelPlannerServletTest {
-  addServlet(new LogoutServlet(db), "/logout")
   val X_SESSION_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   val AUTH_HEADER = Map("Cookie" -> s"X-Session-Id=$X_SESSION_ID")
 
