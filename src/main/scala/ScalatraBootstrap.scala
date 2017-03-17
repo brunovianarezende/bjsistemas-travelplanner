@@ -1,10 +1,9 @@
-import org.slf4j.LoggerFactory
-import slick.jdbc.JdbcBackend.{Database, DatabaseDef}
-import org.scalatra._
 import javax.servlet.ServletContext
 
-import nom.bruno.travelplanner._
-import nom.bruno.travelplanner.servlets.{LoginServlet, UsersServlet}
+import nom.bruno.travelplanner.servlets.{LoginServlet, LogoutServlet, UsersServlet}
+import org.scalatra._
+import org.slf4j.LoggerFactory
+import slick.jdbc.JdbcBackend.{Database, DatabaseDef}
 
 class ScalatraBootstrap extends LifeCycle {
   val logger = LoggerFactory.getLogger(getClass)
@@ -16,6 +15,7 @@ class ScalatraBootstrap extends LifeCycle {
     db = Database.forConfig("mysql")
     context.mount(new UsersServlet(db), "/users/*")
     context.mount(new LoginServlet(db), "/login")
+    context.mount(new LogoutServlet(db), "/logout")
   }
 
   private def closeDbConnection(): Unit = {
