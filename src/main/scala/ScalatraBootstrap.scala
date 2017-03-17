@@ -4,6 +4,7 @@ import org.scalatra._
 import javax.servlet.ServletContext
 
 import nom.bruno.travelplanner._
+import nom.bruno.travelplanner.servlets.{LoginServlet, UsersServlet}
 
 class ScalatraBootstrap extends LifeCycle {
   val logger = LoggerFactory.getLogger(getClass)

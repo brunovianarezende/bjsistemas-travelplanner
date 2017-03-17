@@ -1,7 +1,8 @@
 package nom.bruno.travelplanner.services
 
 import nom.bruno.travelplanner.Tables.{Session, User, sessions}
-import nom.bruno.travelplanner.{LoginData, Tables}
+import nom.bruno.travelplanner.Tables
+import nom.bruno.travelplanner.servlets.LoginData
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 

@@ -1,9 +1,9 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.servlets
 
+import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json._
-import org.json4s.{DefaultFormats, Formats}
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global

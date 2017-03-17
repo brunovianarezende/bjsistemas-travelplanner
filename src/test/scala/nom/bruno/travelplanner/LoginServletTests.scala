@@ -2,6 +2,7 @@ package nom.bruno.travelplanner
 
 import java.net.HttpCookie
 
+import nom.bruno.travelplanner.servlets._
 import org.json4s.jackson.JsonMethods.parse
 import slick.jdbc.MySQLProfile.api._
 

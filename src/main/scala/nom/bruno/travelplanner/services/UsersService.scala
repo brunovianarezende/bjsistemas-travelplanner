@@ -2,17 +2,17 @@ package nom.bruno.travelplanner.services
 
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
-import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.{Error, ErrorCodes, NewUserData, Tables}
+import nom.bruno.travelplanner.Tables.{User, users}
+import nom.bruno.travelplanner.servlets.{Error, ErrorCodes, NewUserData}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class UsersService(val db: Database)(implicit val executionContext: ExecutionContext) {
-  def getAllUsers: Future[Seq[User]] = db.run(Tables.users.result)
+  def getAllUsers: Future[Seq[User]] = db.run(users.result)
 
-  def getUser(email: String): Future[Option[User]] = db.run(Tables.users.filter(_.email === email).result.headOption)
+  def getUser(email: String): Future[Option[User]] = db.run(users.filter(_.email === email).result.headOption)
 
-  def validateNewUser(email: String, newUserData: NewUserData): Future[Either[Error, Tables.User]] = {
+  def validateNewUser(email: String, newUserData: NewUserData): Future[Either[Error, User]] = {
     if (!validateEmail(email)) {
       Future {
         Left(Error(ErrorCodes.INVALID_EMAIL))
@@ -29,9 +29,9 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
       }
     }
     else {
-      db.run(Tables.users.filter(_.email === email).length.result) map (numUsers => {
+      db.run(users.filter(_.email === email).length.result) map (numUsers => {
         if (numUsers == 0) {
-          Right(Tables.User.withSaltedPassword(email, newUserData.password))
+          Right(User.withSaltedPassword(email, newUserData.password))
         }
         else {
           Left(Error(ErrorCodes.USER_ALREADY_REGISTERED))
@@ -40,9 +40,9 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
     }
   }
 
-  def addUser(user: Tables.User): Future[Unit] = {
+  def addUser(user: User): Future[Unit] = {
     val insertActions = DBIO.seq(
-      Tables.users += user
+      users += user
     )
     db.run(insertActions)
   }
