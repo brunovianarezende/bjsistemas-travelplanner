@@ -31,4 +31,9 @@ class AuthenticationService(val db: Database)(implicit val executionContext: Exe
     val query = sessions.filter(_.sessionId === sessionId).flatMap(_.user).result.headOption
     db.run(query)
   }
+
+  def deleteSession(sessionId: String): Future[Int] = {
+    val action = sessions.filter(_.sessionId === sessionId).delete
+    db.run(action)
+  }
 }
