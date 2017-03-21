@@ -2,6 +2,7 @@ package nom.bruno.travelplanner
 
 import java.net.HttpCookie
 
+import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.servlets._
 import org.json4s.jackson.JsonMethods.parse
 import slick.jdbc.MySQLProfile.api._
@@ -14,7 +15,7 @@ class LoginServletTests extends BaseTravelPlannerServletTest {
     val setupActions = DBIO.seq(
       Tables.users ++= Seq(
         Tables.User.withSaltedPassword("bla@bla.com", "password"),
-        Tables.User(None, "ble@bla.com", "passsword", "salt", "NORMAL") // no salt will be applied in this user password
+        Tables.User(None, "ble@bla.com", "passsword", "salt", Role.NORMAL) // no salt will be applied in this user password
       )
     )
     Await.result(db.run(setupActions), Duration.Inf)

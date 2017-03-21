@@ -1,7 +1,6 @@
 package nom.bruno.travelplanner
 
-import java.net.HttpCookie
-
+import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.servlets._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -17,10 +16,10 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
   def withUsers(testCode: => Any): Unit = {
     val normalUsers = Tables.users ++= Seq(
       Tables.User.withSaltedPassword("bla@bla.com", "password"),
-      Tables.User(None, "ble@bla.com", "passsword", "salt", "NORMAL") // no salt will be applied in this user password
+      Tables.User(None, "ble@bla.com", "passsword", "salt", Role.NORMAL) // no salt will be applied in this user password
     )
     val adminUserAndItsSession = for {
-      id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword("admin@admin.com", "password", role = "ADMIN")
+      id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword("admin@admin.com", "password", role = Role.ADMIN)
       _ <- Tables.sessions += Tables.Session(X_SESSION_ID, id)
     } yield ()
     val setupActions = DBIO.seq(
@@ -108,9 +107,9 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
           status should equal(200)
 
           parse(body).extract[Result[List[UserView]]].data should be(Some(List(
-            UserView("bla@bla.com", "NORMAL"),
-            UserView("ble@bla.com", "NORMAL"),
-            UserView("admin@admin.com", "ADMIN")
+            UserView("bla@bla.com", Role.NORMAL),
+            UserView("ble@bla.com", Role.NORMAL),
+            UserView("admin@admin.com", Role.ADMIN)
           )))
         }
       }
@@ -143,7 +142,7 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
 
           parse(body).extract[Result[UserView]] should have(
             'success (true),
-            'data (Some(UserView("bla@bla.com", "NORMAL")))
+            'data (Some(UserView("bla@bla.com", Role.NORMAL)))
           )
         }
       }

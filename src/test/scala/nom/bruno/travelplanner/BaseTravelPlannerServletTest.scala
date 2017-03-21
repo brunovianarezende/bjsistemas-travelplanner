@@ -1,8 +1,8 @@
 package nom.bruno.travelplanner
 
 import nom.bruno.travelplanner.servlets.TravelPlannerServlet
+import org.json4s.Formats
 import org.json4s.jackson.Serialization.write
-import org.json4s.{DefaultFormats, Formats}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import slick.jdbc.JdbcBackend.Database
@@ -15,7 +15,8 @@ import scala.concurrent.{Await, ExecutionContext}
 trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
   protected implicit def executor: ExecutionContext = global
 
-  implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
+  protected implicit val jsonFormats: Formats = TravelPlannerServlet.jsonFormats
+
   lazy val db = Database.forConfig("mysql")
 
   for {

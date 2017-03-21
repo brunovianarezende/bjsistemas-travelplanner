@@ -1,5 +1,7 @@
 package nom.bruno.travelplanner.servlets
 
+import nom.bruno.travelplanner.Tables.Role
+import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json._
@@ -10,7 +12,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait TravelPlannerServlet extends ScalatraServlet with JacksonJsonSupport with FutureSupport {
-  protected implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
+  protected implicit val jsonFormats: Formats = TravelPlannerServlet.jsonFormats
 
   protected implicit def executor: ExecutionContext = global
 
@@ -36,5 +38,7 @@ object TravelPlannerServlet {
       (new LogoutServlet(db), "/logout")
     )
   }
+
+  def jsonFormats = DefaultFormats.withBigDecimal + new EnumNameSerializer(Role)
 
 }

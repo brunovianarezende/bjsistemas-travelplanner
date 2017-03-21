@@ -1,5 +1,6 @@
 package nom.bruno.travelplanner
 
+import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.services.AuthenticationService
 import nom.bruno.travelplanner.servlets._
 import org.json4s.jackson.JsonMethods.parse
@@ -14,7 +15,7 @@ class LogoutServletTests extends BaseTravelPlannerServletTest {
 
   def withUsers(testCode: => Any): Unit = {
     val adminUserAndItsSession = for {
-      id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword("admin@admin.com", "password", role = "ADMIN")
+      id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword("admin@admin.com", "password", role = Role.ADMIN)
       _ <- Tables.sessions += Tables.Session(X_SESSION_ID, id)
     } yield ()
     val setupActions = DBIO.seq(

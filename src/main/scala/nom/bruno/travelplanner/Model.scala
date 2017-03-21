@@ -8,7 +8,21 @@ import slick.jdbc.MySQLProfile.api._
 
 object Tables {
 
-  case class User(id: Option[Int], email: String, password: String, salt: String, role: String) {
+  object Role extends Enumeration {
+    type Role = Value
+    val NORMAL = Value("NORMAL")
+    val USER_MANAGER = Value("USER_MANAGER")
+    val ADMIN = Value("ADMIN")
+
+    implicit val rolesMapper = MappedColumnType.base[Role, String](
+      e => e.toString,
+      s => Role.withName(s)
+    )
+  }
+
+  import Role._
+
+  case class User(id: Option[Int], email: String, password: String, salt: String, role: Role) {
     def checkPassword(otherPassword: String): Boolean = {
       password == User.applySalt(otherPassword, salt)
     }
@@ -23,7 +37,7 @@ object Tables {
 
     def salt = column[String]("salt", O.Length(32))
 
-    def role = column[String]("role")
+    def role = column[Role]("role")
 
     def * = (id.?, email, password, salt, role) <> (User.tupled, User.unapply)
   }
@@ -31,7 +45,7 @@ object Tables {
   val users = TableQuery[Users]
 
   object User {
-    def withSaltedPassword(email: String, password: String, role: String = "NORMAL") = {
+    def withSaltedPassword(email: String, password: String, role: Role = Role.NORMAL) = {
       // we won't name this method as `apply` because it will cause problems with tupled definition. I'll try to
       // avoid method overloading from now on.
       val salt = newSalt

@@ -4,6 +4,8 @@ import ScalateKeys._
 
 val ScalatraVersion = "2.5.0"
 
+val json4sVersion = "3.5.1"
+
 ScalatraPlugin.scalatraSettings
 
 scalateSettings
@@ -24,7 +26,8 @@ libraryDependencies ++= Seq(
   "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
   "org.scalatra" %% "scalatra-json" % ScalatraVersion,
   "org.scalatra" %% "scalatra-auth" % ScalatraVersion,
-  "org.json4s"   %% "json4s-jackson" % "3.5.0",
+  "org.json4s" %% "json4s-jackson" % json4sVersion,
+  "org.json4s" %% "json4s-ext" % json4sVersion,
   "com.typesafe.slick" %% "slick" % "3.2.0",
   "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
   "mysql" % "mysql-connector-java" % "5.1.23",

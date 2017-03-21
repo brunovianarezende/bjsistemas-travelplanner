@@ -8,7 +8,9 @@ import slick.jdbc.JdbcBackend.Database
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-case class UserView(email: String, role: String)
+import Tables.Role._
+
+case class UserView(email: String, role: Role)
 
 object UserView {
   def apply(user: Tables.User): UserView = {

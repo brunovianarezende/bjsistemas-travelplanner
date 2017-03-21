@@ -2,6 +2,7 @@ package nom.bruno.travelplanner
 
 import java.net.HttpCookie
 
+import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.servlets._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -41,7 +42,7 @@ class NormalUserJourneysTest extends BaseTravelPlannerServletTest with GivenWhen
 
         parse(body).extract[Result[UserView]] should have(
           'success (true),
-          'data (Some(UserView(email, "NORMAL")))
+          'data (Some(UserView(email, Role.NORMAL)))
         )
       }
 
