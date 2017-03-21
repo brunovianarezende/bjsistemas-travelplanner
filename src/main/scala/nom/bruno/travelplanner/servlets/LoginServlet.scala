@@ -6,6 +6,8 @@ import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
+import scalaz.OptionT
+import scalaz.Scalaz._
 
 case class LoginData(email: String, password: String)
 
@@ -17,17 +19,14 @@ class LoginServlet(val db: Database) extends TravelPlannerServlet {
       val is = {
         Try(parsedBody.extract[LoginData]) match {
           case Success(loginData) => {
-            authService.authenticateUser(loginData) flatMap {
-              case Some(user) => {
-                authService.createNewSession(user) map { sessionId =>
-                  cookies.set("X-Session-Id", sessionId)
-                  Ok()
-                }
-              }
-              case None => Future {
-                Unauthorized(Error(ErrorCodes.INVALID_LOGIN))
-              }
+            (for {
+              user <- OptionT(authService.authenticateUser(loginData))
+              sessionId <- authService.createNewSession(user).liftM[OptionT]
             }
+              yield {
+                cookies.set("X-Session-Id", sessionId)
+                Ok()
+              }).getOrElse(Unauthorized(Error(ErrorCodes.INVALID_LOGIN)))
           }
           case Failure(_) => Future {
             BadRequest(Error(ErrorCodes.BAD_SCHEMA))
