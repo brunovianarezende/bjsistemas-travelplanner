@@ -1,5 +1,6 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.functional
 
+import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.servlets._
 import org.json4s._
