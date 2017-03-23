@@ -48,3 +48,9 @@ object Unauthorized {
     s.Unauthorized(Result(false, None, Some(List(error))))
   }
 }
+
+object Forbidden {
+  def apply(error: Error) = {
+    s.Forbidden(Result(false, None, Some(List(error))))
+  }
+}

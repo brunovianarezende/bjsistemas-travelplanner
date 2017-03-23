@@ -26,8 +26,8 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
   get("/") {
     new AsyncResult {
       val is = {
-        withLoginRequired { _ =>
-          usersService.getAllUsers map (users => {
+        withLoginRequired { authUser =>
+          usersService.getUsers(authUser) map (users => {
             Ok(users.map(user => UserView(user)))
           })
         }
@@ -38,9 +38,10 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
   get("/:email") {
     new AsyncResult {
       val is = {
-        withLoginRequired { _ =>
+        withLoginRequired {authUser =>
           usersService.getUser(params("email")) map {
-            case Some(user) => Ok(UserView(user))
+            case Some(user) if authUser.canSee(user) => Ok(UserView(user))
+            case Some(user) => Forbidden(Error(ErrorCodes.INVALID_USER))
             case None => NotFound(Error(ErrorCodes.INVALID_USER))
           }
         }

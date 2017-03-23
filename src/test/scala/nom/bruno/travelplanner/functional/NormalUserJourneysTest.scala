@@ -10,7 +10,7 @@ import org.scalatest.GivenWhenThen
 
 class NormalUserJourneysTest extends BaseTravelPlannerServletTest with GivenWhenThen {
   feature("user journey") {
-    scenario("login, get users, logout, get users again") {
+    scenario("login, get user, logout, get user again") {
       val email = "brunore@email.com"
       val password = "apassword"
 

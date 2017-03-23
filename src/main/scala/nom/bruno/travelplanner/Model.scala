@@ -23,6 +23,13 @@ object Tables {
   import Role._
 
   case class User(id: Option[Int], email: String, password: String, salt: String, role: Role) {
+    def canSee(other: User): Boolean = {
+      this.id == other.id || (this.role match {
+        case NORMAL => false
+        case _ => this.role >= other.role
+      })
+    }
+
     def checkPassword(otherPassword: String): Boolean = {
       password == User.applySalt(otherPassword, salt)
     }

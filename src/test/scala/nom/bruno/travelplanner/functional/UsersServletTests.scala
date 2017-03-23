@@ -2,6 +2,7 @@ package nom.bruno.travelplanner.functional
 
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
+import nom.bruno.travelplanner.Tables.Role.Role
 import nom.bruno.travelplanner.servlets._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -11,21 +12,40 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class UsersServletTests extends BaseTravelPlannerServletTest {
-  val X_SESSION_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  val AUTH_HEADER = Map("Cookie" -> s"X-Session-Id=$X_SESSION_ID")
+  val ADMIN1 = "admin1@users.com"
+  val ADMIN2 = "admin2@users.com"
+  val USER_MANAGER1 = "usermanager1@users.com"
+  val USER_MANAGER2 = "usermanager2@users.com"
+  val NORMAL1 = "normal1@users.com"
+  val NORMAL2 = "normal2@users.com"
+
+  private[this] def xSessionId(email: String) = {
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + email takeRight (32)
+  }
+
+  private[this] def authHeader(email: String) = {
+    Map("Cookie" -> s"X-Session-Id=${xSessionId(email)}")
+  }
 
   def withUsers(testCode: => Any): Unit = {
-    val normalUsers = Tables.users ++= Seq(
-      Tables.User.withSaltedPassword("bla@bla.com", "password"),
-      Tables.User(None, "ble@bla.com", "passsword", "salt", Role.NORMAL) // no salt will be applied in this user password
-    )
-    val adminUserAndItsSession = for {
-      id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword("admin@admin.com", "password", role = Role.ADMIN)
-      _ <- Tables.sessions += Tables.Session(X_SESSION_ID, id)
-    } yield ()
+    def authenticatedUser(email: String, role: Role) = {
+      for {
+        id <- (Tables.users returning Tables.users.map(_.id)) += Tables.User.withSaltedPassword(email, "password", role = role)
+        _ <- Tables.sessions += Tables.Session(xSessionId(email), id)
+      } yield ()
+    }
+
+    def nonAuthenticatedUser(email: String, role: Role) = {
+      Tables.users += Tables.User.withSaltedPassword(email, "password", role = role)
+    }
+
     val setupActions = DBIO.seq(
-      normalUsers,
-      adminUserAndItsSession
+      authenticatedUser(ADMIN1, Role.ADMIN),
+      nonAuthenticatedUser(ADMIN2, Role.ADMIN),
+      authenticatedUser(USER_MANAGER1, Role.USER_MANAGER),
+      nonAuthenticatedUser(USER_MANAGER2, Role.USER_MANAGER),
+      authenticatedUser(NORMAL1, Role.NORMAL),
+      nonAuthenticatedUser(NORMAL2, Role.NORMAL)
     )
     Await.result(db.run(setupActions), Duration.Inf)
     try {
@@ -104,13 +124,33 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
   feature("get all users") {
     scenario("user authenticated") {
       withUsers {
-        get("/users", headers = AUTH_HEADER) {
+        get("/users", headers = authHeader(ADMIN1)) {
           status should equal(200)
 
           parse(body).extract[Result[List[UserView]]].data should be(Some(List(
-            UserView("bla@bla.com", Role.NORMAL),
-            UserView("ble@bla.com", Role.NORMAL),
-            UserView("admin@admin.com", Role.ADMIN)
+            UserView(ADMIN1, Role.ADMIN),
+            UserView(ADMIN2, Role.ADMIN),
+            UserView(USER_MANAGER1, Role.USER_MANAGER),
+            UserView(USER_MANAGER2, Role.USER_MANAGER),
+            UserView(NORMAL1, Role.NORMAL),
+            UserView(NORMAL2, Role.NORMAL)
+          ).sortBy(_.email)))
+        }
+        get("/users", headers = authHeader(USER_MANAGER1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[List[UserView]]].data should be(Some(List(
+            UserView(USER_MANAGER1, Role.USER_MANAGER),
+            UserView(USER_MANAGER2, Role.USER_MANAGER),
+            UserView(NORMAL1, Role.NORMAL),
+            UserView(NORMAL2, Role.NORMAL)
+          ).sortBy(_.email)))
+        }
+        get("/users", headers = authHeader(NORMAL1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[List[UserView]]].data should be(Some(List(
+            UserView(NORMAL1, Role.NORMAL)
           )))
         }
       }
@@ -127,7 +167,7 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
 
   feature("get one user by email") {
     scenario("user not authenticated") {
-      get("/users/bla@bla.com") {
+      get(s"/users/$NORMAL1") {
         status should equal(401)
         parse(body).extract[Result[UserView]] should have(
           'success (false),
@@ -136,14 +176,68 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
       }
     }
 
-    scenario("email found") {
+    scenario("get own user") {
       withUsers {
-        get("/users/bla@bla.com", headers = AUTH_HEADER) {
+        get(s"/users/$NORMAL1", headers = authHeader(NORMAL1)) {
           status should equal(200)
 
           parse(body).extract[Result[UserView]] should have(
             'success (true),
-            'data (Some(UserView("bla@bla.com", Role.NORMAL)))
+            'data (Some(UserView(NORMAL1, Role.NORMAL)))
+          )
+        }
+        get(s"/users/$USER_MANAGER1", headers = authHeader(USER_MANAGER1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
+          )
+        }
+        get(s"/users/$ADMIN1", headers = authHeader(ADMIN1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(ADMIN1, Role.ADMIN)))
+          )
+        }
+      }
+    }
+
+    scenario("get other user") {
+      // for more detailed rules, please see nom.bruno.travelplanner.unit.UserTests#can see
+      withUsers {
+        get(s"/users/$ADMIN1", headers = authHeader(NORMAL1)) {
+          status should equal(403)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+        get(s"/users/$NORMAL1", headers = authHeader(USER_MANAGER1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(NORMAL1, Role.NORMAL)))
+          )
+        }
+        get(s"/users/$ADMIN1", headers = authHeader(USER_MANAGER1)) {
+          status should equal(403)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+        get(s"/users/$USER_MANAGER1", headers = authHeader(ADMIN1)) {
+          status should equal(200)
+
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
           )
         }
       }
@@ -151,7 +245,7 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
 
     scenario("email not found") {
       withUsers {
-        get("/users/idontexist@bla.com", headers = AUTH_HEADER) {
+        get("/users/idontexist@bla.com", headers = authHeader(ADMIN1)) {
           status should equal(404)
           parse(body).extract[Result[UserView]] should have(
             'success (false),
