@@ -70,7 +70,7 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
         List(),
         (1).asInstanceOf[AnyRef],
         Map("password" -> "!1APassword"),
-        Map("passwordConfirmation" -> "!1APassword"))) {
+        Map("password_confirmation" -> "!1APassword"))) {
         putAsJson("/users/brunore@email.com", badInput) {
           status should equal(400)
           val result = parse(body).extract[Result[_]]
@@ -254,6 +254,145 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
         }
       }
     }
+  }
 
+  feature("Change user data") {
+    // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#change role or password
+    scenario("a user can change its own password") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword"), authHeader(NORMAL1)) {
+          status should equal(200)
+          parse(body).extract[Result[_]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("a user can't change its own role") {
+      withUsers {
+        postAsJson(s"/users/$USER_MANAGER1", ChangeUserData.create(Role.NORMAL), authHeader(USER_MANAGER1)) {
+          status should equal(403)
+          parse(body).extract[Result[_]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_ROLE))))
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can change normal users role's and password's") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeader(USER_MANAGER1)) {
+          status should equal(200)
+          parse(body).extract[Result[_]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can't change admins' role") {
+      withUsers {
+        postAsJson(s"/users/$ADMIN1", ChangeUserData.create(Role.USER_MANAGER), authHeader(USER_MANAGER1)) {
+          status should equal(403)
+          parse(body).extract[Result[_]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_ROLE))))
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can't change admins' password") {
+      withUsers {
+        postAsJson(s"/users/$ADMIN1", ChangeUserData.create("newpassword", "newpassword"), authHeader(USER_MANAGER1)) {
+          status should equal(403)
+          parse(body).extract[Result[_]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_PASSWORD))))
+          )
+        }
+      }
+    }
+
+    scenario("an admin can change other users role's and password's") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeader(ADMIN1)) {
+          status should equal(200)
+          parse(body).extract[Result[_]] should have(
+            'success (true)
+          )
+        }
+        postAsJson(s"/users/$USER_MANAGER1", ChangeUserData.create("newpassword", "newpassword", Role.ADMIN), authHeader(ADMIN1)) {
+          status should equal(200)
+          parse(body).extract[Result[_]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("invalid new password") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("abc", "abc"), authHeader(ADMIN1)) {
+          status should equal(400)
+          val result = parse(body).extract[Result[_]]
+          result.success should be(false)
+          result.errors.get should be(List(Error(ErrorCodes.INVALID_PASSWORD)))
+        }
+      }
+    }
+
+    scenario("wrong confirmation") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk"), authHeader(ADMIN1)) {
+          status should equal(400)
+          val result = parse(body).extract[Result[_]]
+          result.success should be(false)
+          result.errors.get should be(List(Error(ErrorCodes.INVALID_PASSWORD_CONFIRMATION)))
+        }
+      }
+    }
+
+    scenario("user not authenticated") {
+      withUsers {
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk")) {
+          status should equal(401)
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
+          )
+        }
+      }
+    }
+
+    scenario("bad schema") {
+      withUsers {
+        for (badInput <- List(ChangeUserData(None, None, None),
+          ChangeUserData(Some("password"), None, None),
+          ChangeUserData(None, Some("confirmation"), None),
+          Map("role" -> "NEW_ROLE"))) {
+          postAsJson(s"/users/$NORMAL1", badInput, authHeader(ADMIN1)) {
+            status should equal(400)
+            val result = parse(body).extract[Result[_]]
+            result.success should be(false)
+            result.errors.get should be(List(Error(ErrorCodes.BAD_SCHEMA)))
+          }
+        }
+      }
+    }
+
+    scenario("email not found") {
+      withUsers {
+        postAsJson(s"/users/idontexist@bla.com", ChangeUserData.create("newpassword", "newpassword"), authHeader(ADMIN1)) {
+          status should equal(404)
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
   }
 }

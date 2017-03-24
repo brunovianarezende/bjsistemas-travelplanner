@@ -18,55 +18,128 @@ class UserTests extends FunSpec {
     describe("can see") {
       describe("A NORMAL user") {
         it("can see its own data") {
-          assert(true == normal1.canSee(normal1))
+          assert(normal1.canSee(normal1))
         }
 
         it("can't see other NORMAL users data") {
-          assert(false == normal1.canSee(normal2))
+          assert(!normal1.canSee(normal2))
         }
 
         it("can't see USER_MANAGER users data") {
-          assert(false == normal1.canSee(um1))
+          assert(!normal1.canSee(um1))
         }
 
         it("can't see ADMIN users data") {
-          assert(false == normal1.canSee(admin1))
+          assert(!normal1.canSee(admin1))
         }
       }
 
       describe("A USER_MANAGER user") {
         it("can see its own data") {
-          assert(true == um1.canSee(um1))
+          assert(um1.canSee(um1))
         }
 
         it("can see NORMAL users data") {
-          assert(true == um1.canSee(normal1))
+          assert(um1.canSee(normal1))
         }
 
         it("can see other USER_MANAGER users data") {
-          assert(true == um1.canSee(um2))
+          assert(um1.canSee(um2))
         }
 
         it("can't see ADMIN users data") {
-          assert(false == um1.canSee(admin1))
+          assert(!um1.canSee(admin1))
         }
       }
 
       describe("An ADMIN user") {
         it("can see its own data") {
-          assert(true == admin1.canSee(admin1))
+          assert(admin1.canSee(admin1))
         }
 
         it("can see NORMAL users data") {
-          assert(true == admin1.canSee(normal1))
+          assert(admin1.canSee(normal1))
         }
 
         it("can see USER_MANAGER users data") {
-          assert(true == admin1.canSee(um1))
+          assert(admin1.canSee(um1))
         }
 
         it("can see other ADMIN users data") {
-          assert(true == admin1.canSee(admin2))
+          assert(admin1.canSee(admin2))
+        }
+      }
+    }
+
+    describe("change role or password") {
+      describe("No kind of user") {
+        it("can change its own role") {
+          assert(!normal1.canChangeRole(normal1, Role.USER_MANAGER))
+          assert(!um1.canChangeRole(um1, Role.NORMAL))
+          assert(!admin1.canChangeRole(admin1, Role.NORMAL))
+        }
+      }
+
+      describe("All kind of users") {
+        it("can change their own password") {
+          for (user: User <- Seq(normal1, um1, admin1)) {
+            assert(user.canChangePassword(user))
+          }
+
+        }
+      }
+
+      describe("A NORMAL user") {
+        it("can't change anything from any other user") {
+          for (user: User <- Seq(normal2, um1, admin1)) {
+            assert(!normal1.canChangePassword(user))
+            assert(!normal1.canChangeRole(user, user.role))
+          }
+        }
+      }
+
+      describe("A USER_MANAGER user") {
+        it("can change the password of NORMAL users") {
+          assert(um1.canChangePassword(normal1))
+        }
+
+        it("can change the role of NORMAL users to USER_MANAGER") {
+          assert(um1.canChangeRole(normal1, Role.USER_MANAGER))
+        }
+
+        it("can change the role of other USER_MANAGER to NORMAL") {
+          assert(um1.canChangeRole(um2, Role.NORMAL))
+        }
+
+        it("can change the password of other USER_MANAGER") {
+          assert(um1.canChangePassword(um2))
+        }
+
+        it("can't change the role of any kind of user to ADMIN") {
+          assert(!um1.canChangeRole(normal1, Role.ADMIN))
+          assert(!um1.canChangeRole(um2, Role.ADMIN))
+        }
+
+        it("can't change anything of ADMIN users") {
+          assert(!um1.canChangeRole(admin1, Role.NORMAL))
+          assert(!um1.canChangePassword(admin1))
+        }
+      }
+
+      describe("An ADMIN user") {
+        it("can change the password of all kind of users") {
+          assert(admin1.canChangePassword(normal1))
+          assert(admin1.canChangePassword(um1))
+          assert(admin1.canChangePassword(admin2))
+        }
+
+        it("can change the role of any other user to any role") {
+          assert(admin1.canChangeRole(normal1, Role.USER_MANAGER))
+          assert(admin1.canChangeRole(normal1, Role.ADMIN))
+          assert(admin1.canChangeRole(um1, Role.NORMAL))
+          assert(admin1.canChangeRole(um1, Role.ADMIN))
+          assert(admin1.canChangeRole(admin2, Role.NORMAL))
+          assert(admin1.canChangeRole(admin2, Role.USER_MANAGER))
         }
       }
     }

@@ -53,7 +53,8 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
   }
 
   def postAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    post[A](uri, write(body).getBytes("UTF-8"), headers) {
+    val newHeaders = Map("Content-Type" -> "application/json") ++ headers
+    post[A](uri, write(body).getBytes("UTF-8"), newHeaders) {
       f
     }
   }

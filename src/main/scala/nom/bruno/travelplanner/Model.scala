@@ -23,7 +23,25 @@ object Tables {
   import Role._
 
   case class User(id: Option[Int], email: String, password: String, salt: String, role: Role) {
+    def encodePassword(s: String): String = {
+      User.applySalt(s, this.salt)
+    }
+
     def canSee(other: User): Boolean = {
+      this.id == other.id || (this.role match {
+        case NORMAL => false
+        case _ => this.role >= other.role
+      })
+    }
+
+    def canChangeRole(other: User, role: Role): Boolean = {
+      this.id != other.id && (this.role match {
+        case NORMAL => false
+        case _ => this.role >= other.role && this.role >= role
+      })
+    }
+
+    def canChangePassword(other: User): Boolean = {
       this.id == other.id || (this.role match {
         case NORMAL => false
         case _ => this.role >= other.role

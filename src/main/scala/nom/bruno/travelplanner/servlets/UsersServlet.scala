@@ -1,5 +1,6 @@
 package nom.bruno.travelplanner.servlets
 
+import nom.bruno.travelplanner.Tables.Role._
 import nom.bruno.travelplanner._
 import nom.bruno.travelplanner.services.UsersService
 import org.scalatra.AsyncResult
@@ -7,8 +8,6 @@ import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-
-import Tables.Role._
 
 case class UserView(email: String, role: Role)
 
@@ -19,6 +18,44 @@ object UserView {
 }
 
 case class NewUserData(password: String, password_confirmation: String)
+
+case class ChangeUserData(password: Option[String], password_confirmation: Option[String], role: Option[Role]) {
+  def schemaOk(): Boolean = {
+    passwordFieldsAreOk && atLeastOneChangeIsDefined
+  }
+
+  private[this] def passwordFieldsAreOk = {
+    (password.isDefined && password_confirmation.isDefined) ||
+      (!password.isDefined && !password_confirmation.isDefined)
+  }
+
+  private[this] def atLeastOneChangeIsDefined = {
+    (password.isDefined && password_confirmation.isDefined) || role.isDefined
+  }
+
+  def isPasswordChange: Boolean = {
+    password.isDefined && password_confirmation.isDefined
+  }
+
+  def isRoleChange: Boolean = {
+    role.isDefined
+  }
+}
+
+object ChangeUserData {
+  def create(password: String, passwordConfirmation: String): ChangeUserData = {
+    apply(Some(password), Some(passwordConfirmation), None)
+  }
+
+  def create(password: String, passwordConfirmation: String, role: Role): ChangeUserData = {
+    apply(Some(password), Some(passwordConfirmation), Some(role))
+  }
+
+  def create(role: Role): ChangeUserData = {
+    apply(None, None, Some(role))
+  }
+
+}
 
 class UsersServlet(val db: Database) extends TravelPlannerServlet with AuthenticationSupport {
   val usersService = new UsersService(db)
@@ -38,7 +75,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
   get("/:email") {
     new AsyncResult {
       val is = {
-        withLoginRequired {authUser =>
+        withLoginRequired { authUser =>
           usersService.getUser(params("email")) map {
             case Some(user) if authUser.canSee(user) => Ok(UserView(user))
             case Some(user) => Forbidden(Error(ErrorCodes.INVALID_USER))
@@ -74,4 +111,32 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
     }
   }
 
+  post("/:email") {
+    new AsyncResult {
+      val is = {
+        val email = params("email")
+        withLoginRequired { authUser =>
+          Try(parsedBody.extract[ChangeUserData]) match {
+            case Success(changeUserData) => {
+              for {
+                validationResult <- usersService.validateChangeUser(authUser, email, changeUserData)
+              } yield {
+                validationResult match {
+                  case Left(error) if error.code == ErrorCodes.INVALID_USER => NotFound(error)
+                  case Left(error) if Set(ErrorCodes.CANT_CHANGE_PASSWORD, ErrorCodes.CANT_CHANGE_ROLE) contains error.code => Forbidden(error)
+                  case Left(error) => BadRequest(error)
+                  case Right(userToChange) => {
+                    usersService.updateUser(userToChange, changeUserData) map (_ => Ok())
+                  }
+                }
+              }
+            }
+            case Failure(e) => Future {
+              BadRequest(Error(ErrorCodes.BAD_SCHEMA))
+            }
+          }
+        }
+      }
+    }
+  }
 }

@@ -39,6 +39,7 @@ object TravelPlannerServlet {
     )
   }
 
-  def jsonFormats = DefaultFormats.withBigDecimal + new EnumNameSerializer(Role)
-
+  def jsonFormats = new DefaultFormats {
+    override val strictOptionParsing = true
+  }.withBigDecimal + new EnumNameSerializer(Role)
 }

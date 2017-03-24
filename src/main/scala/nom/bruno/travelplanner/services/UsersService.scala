@@ -1,9 +1,9 @@
 package nom.bruno.travelplanner.services
 
+import nom.bruno.travelplanner.Tables.{Role, User, users}
+import nom.bruno.travelplanner.servlets.{ChangeUserData, Error, ErrorCodes, NewUserData}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
-import nom.bruno.travelplanner.Tables.{User, users, Role}
-import nom.bruno.travelplanner.servlets.{Error, ErrorCodes, NewUserData}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -49,11 +49,60 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
     }
   }
 
+  def validateChangeUser(authUser: User, email: String, newData: ChangeUserData): Future[Either[Error, User]] = {
+    def f = Future
+
+    if (!newData.schemaOk()) {
+      f(Left(Error(ErrorCodes.BAD_SCHEMA)))
+    }
+    else if (newData.isPasswordChange && !validatePassword(newData.password.get)) {
+      f(Left(Error(ErrorCodes.INVALID_PASSWORD)))
+    }
+    else if (newData.isPasswordChange && newData.password != newData.password_confirmation) {
+      f(Left(Error(ErrorCodes.INVALID_PASSWORD_CONFIRMATION)))
+    }
+    else {
+      for {
+        userOpt <- getUser(email)
+      } yield {
+        userOpt match {
+          case Some(user) => if (newData.isPasswordChange && !authUser.canChangePassword(user)) {
+            Left(Error(ErrorCodes.CANT_CHANGE_PASSWORD))
+          }
+          else if (newData.isRoleChange && !authUser.canChangeRole(user, newData.role.get)) {
+            Left(Error(ErrorCodes.CANT_CHANGE_ROLE))
+          }
+          else {
+            Right(user)
+          }
+          case _ => Left(Error(ErrorCodes.INVALID_USER))
+        }
+      }
+    }
+  }
+
   def addUser(user: User): Future[Unit] = {
     val insertActions = DBIO.seq(
       users += user
     )
     db.run(insertActions)
+  }
+
+  def updateUser(user: User, diff: ChangeUserData): Future[Int] = {
+
+    val q = for {
+      u <- users if u.id === user.id
+    } yield {
+      (u.password, u.role)
+    }
+    val password = if (diff.isPasswordChange) {
+      user.encodePassword(diff.password.get)
+    }
+    else {
+      user.password
+    }
+    val updateAction = q.update((password, diff.role.getOrElse(user.role)))
+    db.run(updateAction)
   }
 
   private[this] def validatePassword(password: String) = {
