@@ -20,12 +20,12 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
 
   lazy val db = Database.forConfig("mysql")
 
-  for {
-    (servlet, path) <- TravelPlannerServlet.servletInstances(db)
-  } addServlet(servlet, path)
 
 
   override protected def beforeAll(): Unit = {
+    for {
+      (servlet, path) <- TravelPlannerServlet.servletInstances(db)
+    } addServlet(servlet, path)
     super.beforeAll()
     //    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
   }
