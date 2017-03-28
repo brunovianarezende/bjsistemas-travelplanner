@@ -1,35 +1,21 @@
+import org.fusesource.scalate.ScalatePlugin.ScalateKeys._
 import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
-import ScalateKeys._
+import sbt.Keys.{libraryDependencies, name, parallelExecution}
 
-val ScalatraVersion = "2.5.0"
-
+val scalatraVersion = "2.5.0"
 val json4sVersion = "3.5.1"
+val slickVersion = "3.2.0"
 
-ScalatraPlugin.scalatraSettings
-
-scalateSettings
-
-organization := "nom.bruno"
-
-name := "Travel Planner"
-
-version := "0.1.0-SNAPSHOT"
-
-scalaVersion := "2.12.1"
-
-resolvers += Classpaths.typesafeReleases
-
-libraryDependencies ++= Seq(
-  "org.scalatra" %% "scalatra" % ScalatraVersion,
-  "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
-  "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
-  "org.scalatra" %% "scalatra-json" % ScalatraVersion,
-  "org.scalatra" %% "scalatra-auth" % ScalatraVersion,
+val dependencies = libraryDependencies ++= Seq(
+  "org.scalatra" %% "scalatra" % scalatraVersion,
+  "org.scalatra" %% "scalatra-scalate" % scalatraVersion,
+  "org.scalatra" %% "scalatra-scalatest" % scalatraVersion % "test",
+  "org.scalatra" %% "scalatra-json" % scalatraVersion,
+  "org.scalatra" %% "scalatra-auth" % scalatraVersion,
   "org.json4s" %% "json4s-jackson" % json4sVersion,
   "org.json4s" %% "json4s-ext" % json4sVersion,
-  "com.typesafe.slick" %% "slick" % "3.2.0",
-  "com.typesafe.slick" %% "slick-hikaricp" % "3.2.0",
+  "com.typesafe.slick" %% "slick" % slickVersion,
+  "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
   "mysql" % "mysql-connector-java" % "5.1.23",
   "ch.qos.logback" % "logback-classic" % "1.1.5" % "runtime",
   "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "container",
@@ -38,21 +24,33 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.2.10"
 )
 
-scalateTemplateConfig in Compile := {
-  val base = (sourceDirectory in Compile).value
-  Seq(
-    TemplateConfig(
-      base / "webapp" / "WEB-INF" / "templates",
-      Seq.empty,  /* default imports should be added here */
+lazy val travelplanner = (project in file("."))
+  .enablePlugins(JettyPlugin)
+  .settings(
+    organization := "nom.bruno",
+    name := "Travel Planner",
+    version := "0.1.0-SNAPSHOT",
+    scalaVersion := "2.12.1",
+    parallelExecution in Test := false,
+    scalateTemplateConfig in Compile := {
+      val base = (sourceDirectory in Compile).value
       Seq(
-        Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
-      ),  /* add extra bindings here */
-      Some("templates")
-    )
+        TemplateConfig(
+          base / "webapp" / "WEB-INF" / "templates",
+          Seq.empty, /* default imports should be added here */
+          Seq(
+            Binding("context", "_root_.org.scalatra.scalate.ScalatraRenderContext", importMembers = true, isImplicit = true)
+          ), /* add extra bindings here */
+          Some("templates")
+        )
+      )
+    },
+    resolvers += Classpaths.typesafeReleases
   )
-}
+  .settings(dependencies)
+  .settings(ScalatraPlugin.scalatraSettings: _*)
+  .settings(scalateSettings: _*)
+  .settings(debugPort in Jetty := 5005)
 
-enablePlugins(JettyPlugin)
 
-debugPort in Jetty := 5005
-parallelExecution in Test := false
+
