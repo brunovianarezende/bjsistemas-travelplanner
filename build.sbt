@@ -28,9 +28,13 @@ val commonSettings = Seq(
   resolvers += Classpaths.typesafeReleases
 )
 
-lazy val travelplanner = (project in file("."))
+lazy val baseTravelPlanner = (project in file("."))
+  .settings(commonSettings: _*)
+  .aggregate(api, integration)
+
+lazy val api = (project in file("api"))
   .enablePlugins(JettyPlugin)
-  .settings(name := "travelplanner")
+  .settings(name := "api")
   .settings(commonSettings: _*)
   .settings(dependencies)
   .settings(ScalatraPlugin.scalatraSettings: _*)
@@ -39,9 +43,11 @@ lazy val travelplanner = (project in file("."))
 lazy val integration = (project in file("integration"))
   .enablePlugins(JettyPlugin)
   .settings(
-    name := "travelplanner-integration",
+    name := "integration",
     parallelExecution in Test := false
   )
   .settings(commonSettings: _*)
   .settings(dependencies)
-  .dependsOn(travelplanner)
+  .dependsOn(api)
+
+onLoad in Global := (onLoad in Global).value andThen (Command.process("project api", _))
