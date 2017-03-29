@@ -6,6 +6,8 @@ import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.OptionT
+import scalaz.Scalaz._
 
 class UsersService(val db: Database)(implicit val executionContext: ExecutionContext) {
   def getUsers(authUser: User): Future[Seq[User]] = {
@@ -62,43 +64,34 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
       f(Left(Error(ErrorCodes.INVALID_PASSWORD_CONFIRMATION)))
     }
     else {
-      for {
-        userOpt <- getUser(email)
+      (for {
+        user <- OptionT(getUser(email))
       } yield {
-        userOpt match {
-          case Some(user) => if (newData.isPasswordChange && !authUser.canChangePassword(user)) {
-            Left(Error(ErrorCodes.CANT_CHANGE_PASSWORD))
-          }
-          else if (newData.isRoleChange && !authUser.canChangeRole(user, newData.role.get)) {
-            Left(Error(ErrorCodes.CANT_CHANGE_ROLE))
-          }
-          else {
-            Right(user)
-          }
-          case _ => Left(Error(ErrorCodes.INVALID_USER))
+        if (newData.isPasswordChange && !authUser.canChangePassword(user)) {
+          Left(Error(ErrorCodes.CANT_CHANGE_PASSWORD))
         }
-      }
+        else if (newData.isRoleChange && !authUser.canChangeRole(user, newData.role.get)) {
+          Left(Error(ErrorCodes.CANT_CHANGE_ROLE))
+        }
+        else {
+          Right(user)
+        }
+      }).getOrElse(Left(Error(ErrorCodes.INVALID_USER)))
     }
   }
 
   def validateDeleteUser(authUser: User, email: String): Future[Either[Error, User]] = {
-    for {
-      userOpt <- getUser(email)
+    (for {
+      user <- OptionT(getUser(email))
     } yield {
-      userOpt match {
-        case Some(user) => {
-          if (authUser.canDelete(user)) {
-            Right(user)
-          }
-          else {
-            Left(Error(ErrorCodes.CANT_DELETE_USER))
-          }
-        }
-        case _ => Left(Error(ErrorCodes.INVALID_USER))
+      if (authUser.canDelete(user)) {
+        Right(user)
       }
-    }
+      else {
+        Left(Error(ErrorCodes.CANT_DELETE_USER))
+      }
+    }).getOrElse(Left(Error(ErrorCodes.INVALID_USER)))
   }
-
 
   def addUser(user: User): Future[Unit] = {
     val insertActions = DBIO.seq(
