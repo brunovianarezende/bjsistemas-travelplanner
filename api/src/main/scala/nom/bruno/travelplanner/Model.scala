@@ -48,6 +48,10 @@ object Tables {
       })
     }
 
+    def canDelete(other: User): Boolean = {
+      this.id != other.id && this.role > other.role
+    }
+
     def checkPassword(otherPassword: String): Boolean = {
       password == User.applySalt(otherPassword, salt)
     }

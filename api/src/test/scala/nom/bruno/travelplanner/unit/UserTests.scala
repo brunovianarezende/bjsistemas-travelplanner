@@ -143,5 +143,49 @@ class UserTests extends FunSpec {
         }
       }
     }
+
+    describe("can delete") {
+      describe("No kind of user") {
+        it("can delete itself") {
+          for(user <- Seq(admin1, um1, normal1)) {
+            assert(!user.canDelete(user))
+          }
+        }
+      }
+
+      describe("A normal user") {
+        it("can't delete any other user") {
+          for(user <- Seq(admin1, um1, normal1)) {
+            assert(!normal2.canDelete(user))
+          }
+        }
+      }
+
+      describe("A user manager") {
+        it("can delete normal users") {
+          assert(um1.canDelete(normal1))
+        }
+        it("can't delete a user manager") {
+          assert(!um1.canDelete(um2))
+        }
+
+        it("can't delete an admin") {
+          assert(!um1.canDelete(admin1))
+        }
+      }
+
+      describe("An admin") {
+        it("can delete normal users") {
+          assert(admin1.canDelete(normal1))
+        }
+        it("can delete a user manager") {
+          assert(admin1.canDelete(um1))
+        }
+
+        it("can't delete an admin") {
+          assert(!admin1.canDelete(admin1))
+        }
+      }
+    }
   }
 }

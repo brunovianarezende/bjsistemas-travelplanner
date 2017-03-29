@@ -81,6 +81,25 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
     }
   }
 
+  def validateDeleteUser(authUser: User, email: String): Future[Either[Error, User]] = {
+    for {
+      userOpt <- getUser(email)
+    } yield {
+      userOpt match {
+        case Some(user) => {
+          if (authUser.canDelete(user)) {
+            Right(user)
+          }
+          else {
+            Left(Error(ErrorCodes.CANT_DELETE_USER))
+          }
+        }
+        case _ => Left(Error(ErrorCodes.INVALID_USER))
+      }
+    }
+  }
+
+
   def addUser(user: User): Future[Unit] = {
     val insertActions = DBIO.seq(
       users += user
@@ -89,7 +108,6 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
   }
 
   def updateUser(user: User, diff: ChangeUserData): Future[Int] = {
-
     val q = for {
       u <- users if u.id === user.id
     } yield {
@@ -103,6 +121,11 @@ class UsersService(val db: Database)(implicit val executionContext: ExecutionCon
     }
     val updateAction = q.update((password, diff.role.getOrElse(user.role)))
     db.run(updateAction)
+  }
+
+  def deleteUser(user: User): Future[Int] = {
+    val q = users.filter(_.id === user.id)
+    db.run(q.delete)
   }
 
   private[this] def validatePassword(password: String) = {

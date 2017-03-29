@@ -17,6 +17,7 @@ object ErrorCodes {
   val BAD_SCHEMA = 12
   val CANT_CHANGE_PASSWORD = 13
   val CANT_CHANGE_ROLE = 14
+  val CANT_DELETE_USER = 15
 }
 
 case class Error(code: Int)

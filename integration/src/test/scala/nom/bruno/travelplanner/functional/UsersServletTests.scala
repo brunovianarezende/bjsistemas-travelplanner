@@ -395,4 +395,99 @@ class UsersServletTests extends BaseTravelPlannerServletTest {
       }
     }
   }
+
+  feature("delete user") {
+    // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#delete
+    scenario("no user can delete itself") {
+      withUsers {
+        for (user <- Seq(ADMIN1, USER_MANAGER1, NORMAL1)) {
+          delete(s"/users/$user", headers = authHeader(user)) {
+            status should be(403)
+            parse(body).extract[Result[UserView]] should have(
+              'success (false),
+              'errors (Some(List(Error(ErrorCodes.CANT_DELETE_USER))))
+            )
+          }
+        }
+      }
+    }
+
+    scenario("a normal user can't delete any other user") {
+      withUsers {
+        for (user <- Seq(ADMIN1, USER_MANAGER1, NORMAL2)) {
+          delete(s"/users/$user", headers = authHeader(NORMAL1)) {
+            status should be(403)
+            parse(body).extract[Result[UserView]] should have(
+              'success (false),
+              'errors (Some(List(Error(ErrorCodes.CANT_DELETE_USER))))
+            )
+          }
+        }
+      }
+    }
+
+    scenario("a user manager can delete normal users") {
+      withUsers {
+        delete(s"/users/$NORMAL1", headers = authHeader(USER_MANAGER1)) {
+          status should be(200)
+          parse(body).extract[Result[UserView]] should have(
+            'success (true)
+          )
+        }
+
+        get(s"/users/$NORMAL1", headers = authHeader(USER_MANAGER1)) {
+          status should equal(404)
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
+
+    scenario("an admin can delete normal and user manager users") {
+      withUsers {
+        for (user <- Seq(NORMAL1, USER_MANAGER1)) {
+          delete(s"/users/$user", headers = authHeader(ADMIN1)) {
+            status should be(200)
+            parse(body).extract[Result[UserView]] should have(
+              'success (true)
+            )
+          }
+
+          get(s"/users/$user", headers = authHeader(ADMIN1)) {
+            status should equal(404)
+            parse(body).extract[Result[UserView]] should have(
+              'success (false),
+              'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+            )
+          }
+        }
+      }
+    }
+
+    scenario("user not authenticated") {
+      delete(s"/users/$NORMAL1") {
+        status should equal(401)
+        parse(body).extract[Result[UserView]] should have(
+          'success (false),
+          'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
+        )
+      }
+    }
+
+    scenario("try to delete user that doesn't exist") {
+      withUsers {
+        delete("/users/idontexist@users.com", headers = authHeader(ADMIN1)) {
+          status should equal(404)
+          parse(body).extract[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
+
+  }
+
 }

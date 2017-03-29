@@ -139,4 +139,26 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
       }
     }
   }
+
+  delete("/:email") {
+    new AsyncResult {
+      val is = {
+        val email = params("email")
+        withLoginRequired { authUser =>
+          for {
+            validationResult <- usersService.validateDeleteUser(authUser, email)
+          } yield {
+            validationResult match {
+              case Left(error) if error.code == ErrorCodes.INVALID_USER => NotFound(error)
+              case Left(error) => Forbidden(error)
+              case Right(userToDelete) => {
+                usersService.deleteUser(userToDelete) map (_ => Ok())
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
