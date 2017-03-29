@@ -3,12 +3,12 @@ package nom.bruno.travelplanner.functional
 import java.net.HttpCookie
 
 import nom.bruno.travelplanner.Tables.Role
-import nom.bruno.travelplanner.servlets._
+import nom.bruno.travelplanner.controllers._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen
 
-class NormalUserJourneysTest extends BaseTravelPlannerServletTest with GivenWhenThen {
+class NormalUserJourneysTest extends BaseTravelPlannerStackTest with GivenWhenThen {
   private[this] def authHeader(xSessionId: String) = {
     Map("Cookie" -> s"X-Session-Id=$xSessionId")
   }

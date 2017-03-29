@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.servlets
+package nom.bruno.travelplanner.controllers
 
 import nom.bruno.travelplanner.Tables.Role
 import org.json4s.ext.EnumNameSerializer
@@ -11,8 +11,8 @@ import slick.jdbc.JdbcBackend.Database
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait TravelPlannerServlet extends ScalatraServlet with JacksonJsonSupport with FutureSupport {
-  protected implicit val jsonFormats: Formats = TravelPlannerServlet.jsonFormats
+trait TravelPlannerStack extends ScalatraFilter with JacksonJsonSupport with FutureSupport {
+  protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
   protected implicit def executor: ExecutionContext = global
 
@@ -30,12 +30,12 @@ trait TravelPlannerServlet extends ScalatraServlet with JacksonJsonSupport with 
   }
 }
 
-object TravelPlannerServlet {
-  def servletInstances(db: Database): Seq[(TravelPlannerServlet, String)] = {
+object TravelPlannerStack {
+  def servletInstances(db: Database): Seq[(TravelPlannerStack, String)] = {
     Seq(
-      (new UsersServlet(db), "/users/*"),
-      (new LoginServlet(db), "/login"),
-      (new LogoutServlet(db), "/logout")
+      (new UsersController(db), "/*"),
+      (new LoginController(db), "/*"),
+      (new LogoutController(db), "/*")
     )
   }
 

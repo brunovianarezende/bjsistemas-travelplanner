@@ -3,7 +3,7 @@ package nom.bruno.travelplanner.functional
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.Tables.Role.Role
-import nom.bruno.travelplanner.servlets._
+import nom.bruno.travelplanner.controllers._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import slick.jdbc.MySQLProfile.api._
@@ -11,7 +11,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class UsersServletTests extends BaseTravelPlannerServletTest {
+class UsersControllerTests extends BaseTravelPlannerStackTest {
   val ADMIN1 = "admin1@users.com"
   val ADMIN2 = "admin2@users.com"
   val USER_MANAGER1 = "usermanager1@users.com"

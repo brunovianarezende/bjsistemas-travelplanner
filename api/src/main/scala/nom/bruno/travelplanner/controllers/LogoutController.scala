@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.servlets
+package nom.bruno.travelplanner.controllers
 
 import nom.bruno.travelplanner.services.AuthenticationService
 import org.scalatra.AsyncResult
@@ -6,10 +6,10 @@ import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 
-class LogoutServlet(val db: Database) extends TravelPlannerServlet {
+class LogoutController(val db: Database) extends TravelPlannerStack {
   val authService = new AuthenticationService(db)
 
-  post("/") {
+  post("/logout") {
     new AsyncResult() {
       val is = {
         cookies.get("X-Session-Id") match {

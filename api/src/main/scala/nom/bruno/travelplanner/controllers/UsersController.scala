@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.servlets
+package nom.bruno.travelplanner.controllers
 
 import nom.bruno.travelplanner.Tables.Role._
 import nom.bruno.travelplanner._
@@ -57,10 +57,10 @@ object ChangeUserData {
 
 }
 
-class UsersServlet(val db: Database) extends TravelPlannerServlet with AuthenticationSupport {
+class UsersController(val db: Database) extends TravelPlannerStack with AuthenticationSupport {
   val usersService = new UsersService(db)
 
-  get("/") {
+  get("/users") {
     new AsyncResult {
       val is = {
         withLoginRequired { authUser =>
@@ -72,7 +72,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
     }
   }
 
-  get("/:email") {
+  get("/users/:email") {
     new AsyncResult {
       val is = {
         withLoginRequired { authUser =>
@@ -86,7 +86,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
     }
   }
 
-  put("/:email") {
+  put("/users/:email") {
     new AsyncResult {
       val is = {
         val email = params("email")
@@ -111,7 +111,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
     }
   }
 
-  post("/:email") {
+  post("/users/:email") {
     new AsyncResult {
       val is = {
         val email = params("email")
@@ -140,7 +140,7 @@ class UsersServlet(val db: Database) extends TravelPlannerServlet with Authentic
     }
   }
 
-  delete("/:email") {
+  delete("/users/:email") {
     new AsyncResult {
       val is = {
         val email = params("email")

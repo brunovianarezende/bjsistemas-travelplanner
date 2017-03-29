@@ -5,7 +5,7 @@ import java.net.HttpCookie
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.Tables.Role.Role
-import nom.bruno.travelplanner.servlets._
+import nom.bruno.travelplanner.controllers._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen
@@ -14,7 +14,7 @@ import slick.jdbc.MySQLProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class UserManagerJourneysTest extends BaseTravelPlannerServletTest with GivenWhenThen {
+class UserManagerJourneysTest extends BaseTravelPlannerStackTest with GivenWhenThen {
   val NORMAL_USER = "normal@bla.com"
   val USER_MANAGER_USER = "usermanager@bla.com"
 

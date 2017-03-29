@@ -1,6 +1,6 @@
 import javax.servlet.ServletContext
 
-import nom.bruno.travelplanner.servlets.TravelPlannerServlet
+import nom.bruno.travelplanner.controllers.TravelPlannerStack
 import org.scalatra._
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.{Database, DatabaseDef}
@@ -14,7 +14,7 @@ class ScalatraBootstrap extends LifeCycle {
     logger.info("Creating db connection")
     db = Database.forConfig("mysql")
     for {
-      (servlet, path) <- TravelPlannerServlet.servletInstances(db)
+      (servlet, path) <- TravelPlannerStack.servletInstances(db)
     } context.mount(servlet, path)
   }
 

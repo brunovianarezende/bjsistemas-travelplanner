@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.servlets
+package nom.bruno.travelplanner.controllers
 
 import org.{scalatra => s}
 

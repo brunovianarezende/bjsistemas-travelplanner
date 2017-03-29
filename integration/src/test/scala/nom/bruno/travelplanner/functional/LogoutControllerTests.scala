@@ -3,14 +3,14 @@ package nom.bruno.travelplanner.functional
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.services.AuthenticationService
-import nom.bruno.travelplanner.servlets._
+import nom.bruno.travelplanner.controllers._
 import org.json4s.jackson.JsonMethods.parse
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class LogoutServletTests extends BaseTravelPlannerServletTest {
+class LogoutControllerTests extends BaseTravelPlannerStackTest {
   val X_SESSION_ID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   val AUTH_HEADER = Map("Cookie" -> s"X-Session-Id=$X_SESSION_ID")
 

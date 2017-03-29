@@ -1,7 +1,7 @@
 package nom.bruno.travelplanner.unit
 
 import nom.bruno.travelplanner.Tables.Role
-import nom.bruno.travelplanner.servlets.{ChangeUserData, TravelPlannerServlet}
+import nom.bruno.travelplanner.controllers.{ChangeUserData, TravelPlannerStack}
 import org.scalatest.FunSpec
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
@@ -9,7 +9,7 @@ import org.json4s.jackson.Serialization.write
 
 class SerializationTests extends FunSpec {
   describe("deserialize ChangeUserData") {
-    implicit val jsonFormats: Formats = TravelPlannerServlet.jsonFormats
+    implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
     it("must correctly deserialize roles") {
       assert(parse("{\"role\": \"NORMAL\"}").extract[ChangeUserData] == ChangeUserData.create(Role.NORMAL))

@@ -4,14 +4,14 @@ import java.net.HttpCookie
 
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
-import nom.bruno.travelplanner.servlets._
+import nom.bruno.travelplanner.controllers._
 import org.json4s.jackson.JsonMethods.parse
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class LoginServletTests extends BaseTravelPlannerServletTest {
+class LoginControllerTests extends BaseTravelPlannerStackTest {
   def withUsers(testCode: => Any): Unit = {
     val setupActions = DBIO.seq(
       Tables.users ++= Seq(

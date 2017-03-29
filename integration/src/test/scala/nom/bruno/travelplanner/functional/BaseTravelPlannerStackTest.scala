@@ -1,7 +1,7 @@
 package nom.bruno.travelplanner.functional
 
 import nom.bruno.travelplanner.Tables
-import nom.bruno.travelplanner.servlets.TravelPlannerServlet
+import nom.bruno.travelplanner.controllers.TravelPlannerStack
 import org.json4s.Formats
 import org.json4s.jackson.Serialization.write
 import org.scalatest.BeforeAndAfterEach
@@ -13,10 +13,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
+trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
   protected implicit def executor: ExecutionContext = global
 
-  protected implicit val jsonFormats: Formats = TravelPlannerServlet.jsonFormats
+  protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
   lazy val db = Database.forConfig("mysql")
 
@@ -24,8 +24,8 @@ trait BaseTravelPlannerServletTest extends ScalatraFeatureSpec with BeforeAndAft
 
   override protected def beforeAll(): Unit = {
     for {
-      (servlet, path) <- TravelPlannerServlet.servletInstances(db)
-    } addServlet(servlet, path)
+      (servlet, path) <- TravelPlannerStack.servletInstances(db)
+    } addFilter(servlet, path)
     super.beforeAll()
     //    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
   }

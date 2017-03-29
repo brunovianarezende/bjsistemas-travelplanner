@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.servlets
+package nom.bruno.travelplanner.controllers
 
 import nom.bruno.travelplanner.services.AuthenticationService
 import org.scalatra.AsyncResult
@@ -11,10 +11,10 @@ import scalaz.Scalaz._
 
 case class LoginData(email: String, password: String)
 
-class LoginServlet(val db: Database) extends TravelPlannerServlet {
+class LoginController(val db: Database) extends TravelPlannerStack {
   val authService = new AuthenticationService(db)
 
-  post("/") {
+  post("/login") {
     new AsyncResult() {
       val is = {
         Try(parsedBody.extract[LoginData]) match {

@@ -1,7 +1,7 @@
 package nom.bruno.travelplanner.services
 
 import nom.bruno.travelplanner.Tables.{Role, User, users}
-import nom.bruno.travelplanner.servlets.{ChangeUserData, Error, ErrorCodes, NewUserData}
+import nom.bruno.travelplanner.controllers.{ChangeUserData, Error, ErrorCodes, NewUserData}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
