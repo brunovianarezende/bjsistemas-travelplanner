@@ -34,6 +34,7 @@ object TravelPlannerStack {
   def servletInstances(db: Database): Seq[(TravelPlannerStack, String)] = {
     Seq(
       (new UsersController(db), "/*"),
+      (new TripsController(db), "/*"),
       (new LoginController(db), "/*"),
       (new LogoutController(db), "/*")
     )
