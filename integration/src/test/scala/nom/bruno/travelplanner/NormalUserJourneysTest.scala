@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.functional
+package nom.bruno.travelplanner
 
 import java.net.HttpCookie
 

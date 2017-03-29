@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.unit
+package nom.bruno.travelplanner
 
 import nom.bruno.travelplanner.Tables.Role
 import org.scalatest.FunSuite

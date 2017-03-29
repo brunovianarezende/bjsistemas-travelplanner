@@ -1,8 +1,7 @@
-package nom.bruno.travelplanner.functional
+package nom.bruno.travelplanner
 
 import java.net.HttpCookie
 
-import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.Tables.Role.Role
 import nom.bruno.travelplanner.controllers._
