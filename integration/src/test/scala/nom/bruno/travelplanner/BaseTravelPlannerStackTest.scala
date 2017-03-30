@@ -1,7 +1,8 @@
 package nom.bruno.travelplanner
 
-import nom.bruno.travelplanner.controllers.TravelPlannerStack
+import nom.bruno.travelplanner.controllers.{Error, ErrorCodes, Result, TravelPlannerStack}
 import org.json4s.Formats
+import org.json4s.jackson.JsonMethods.parse
 import org.json4s.jackson.Serialization.write
 import org.scalatest.BeforeAndAfterEach
 import org.scalatra.test.scalatest.ScalatraFeatureSpec
@@ -18,8 +19,6 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
   protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
   lazy val db = Database.forConfig("mysql")
-
-
 
   override protected def beforeAll(): Unit = {
     for {
@@ -55,6 +54,14 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
     val newHeaders = Map("Content-Type" -> "application/json") ++ headers
     post[A](uri, write(body).getBytes("UTF-8"), newHeaders) {
       f
+    }
+  }
+
+  def checkAuthenticationFailed: Any = {
+    {
+      status should equal(401)
+      val result = parse(body).extract[Result[_]]
+      result.errors.get should be(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED)))
     }
   }
 }

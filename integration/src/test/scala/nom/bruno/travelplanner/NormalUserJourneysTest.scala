@@ -58,13 +58,7 @@ class NormalUserJourneysTest extends BaseTravelPlannerStackTest with GivenWhenTh
       }
 
       Then("he must not be able to get info about his user anymore")
-      get(s"/users/$email", headers = headers) {
-        status should equal(401)
-        parse(body).extract[Result[UserView]] should have(
-          'success (false),
-          'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
-        )
-      }
+      get(s"/users/$email", headers = headers)(checkAuthenticationFailed)
     }
   }
 

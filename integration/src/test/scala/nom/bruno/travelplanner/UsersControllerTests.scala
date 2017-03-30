@@ -156,23 +156,13 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
     }
 
     scenario("user not authenticated") {
-      get("/users") {
-        status should equal(401)
-        val result = parse(body).extract[Result[_]]
-        result.errors.get should be(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED)))
-      }
+      get("/users")(checkAuthenticationFailed)
     }
   }
 
   feature("get one user by email") {
     scenario("user not authenticated") {
-      get(s"/users/$NORMAL1") {
-        status should equal(401)
-        parse(body).extract[Result[UserView]] should have(
-          'success (false),
-          'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
-        )
-      }
+      get(s"/users/$NORMAL1")(checkAuthenticationFailed)
     }
 
     scenario("get own user") {
@@ -356,13 +346,7 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("user not authenticated") {
       withUsers {
-        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk")) {
-          status should equal(401)
-          parse(body).extract[Result[UserView]] should have(
-            'success (false),
-            'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
-          )
-        }
+        postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk"))(checkAuthenticationFailed)
       }
     }
 
@@ -466,13 +450,7 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
     }
 
     scenario("user not authenticated") {
-      delete(s"/users/$NORMAL1") {
-        status should equal(401)
-        parse(body).extract[Result[UserView]] should have(
-          'success (false),
-          'errors (Some(List(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
-        )
-      }
+      delete(s"/users/$NORMAL1") (checkAuthenticationFailed)
     }
 
     scenario("try to delete user that doesn't exist") {
