@@ -19,8 +19,6 @@ class TripsServiceTests extends FunSuite with BeforeAndAfterAll with BeforeAndAf
 
   protected implicit def executor: ExecutionContext = Implicits.global
 
-  protected implicit def localDate2sqlDate(x: LocalDate): Date = Date.valueOf(x)
-
   lazy val db = Database.forConfig("mysql")
   var user1: User = Tables.User.withSaltedPassword("email@email.com", "password")
   var user2: User = Tables.User.withSaltedPassword("email2@email.com", "password")

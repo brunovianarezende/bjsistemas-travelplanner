@@ -1,6 +1,7 @@
 package nom.bruno.travelplanner.controllers
 
 import nom.bruno.travelplanner.Tables.Role
+import nom.bruno.travelplanner.utils.Json4sLocalDateSerializer
 import org.json4s.ext.EnumNameSerializer
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
@@ -42,5 +43,5 @@ object TravelPlannerStack {
 
   def jsonFormats = new DefaultFormats {
     override val strictOptionParsing = true
-  }.withBigDecimal + new EnumNameSerializer(Role)
+  }.withBigDecimal + new EnumNameSerializer(Role) + new Json4sLocalDateSerializer()
 }

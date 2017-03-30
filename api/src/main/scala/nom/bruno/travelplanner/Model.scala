@@ -2,6 +2,7 @@ package nom.bruno.travelplanner
 
 import java.security.MessageDigest
 import java.sql.Date
+import java.time.LocalDate
 import java.util.UUID
 
 import org.apache.commons.codec.binary.Hex
@@ -33,6 +34,10 @@ object Tables {
         case NORMAL => false
         case _ => this.role >= other.role
       })
+    }
+
+    def canSeeTripsFrom(other: User) = {
+      this.id == other.id || this.role == ADMIN
     }
 
     def canChangeRole(other: User, role: Role): Boolean = {
@@ -122,16 +127,21 @@ object Tables {
     def tupled = (Session.apply _).tupled
   }
 
-  case class Trip(id: Option[Int], destination: String, startDate: Date, endDate: Date, comment: String, userId: Int)
+  implicit val datesMapper = MappedColumnType.base[LocalDate, Date](
+    l => Date.valueOf(l),
+    d => d.toLocalDate
+  )
+
+  case class Trip(id: Option[Int], destination: String, startDate: LocalDate, endDate: LocalDate, comment: String, userId: Int)
 
   class Trips(tag: Tag) extends Table[Trip](tag, "trip") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
     def destination = column[String]("destination", O.Length(120))
 
-    def startDate = column[Date]("start_date")
+    def startDate = column[LocalDate]("start_date")
 
-    def endDate = column[Date]("end_date")
+    def endDate = column[LocalDate]("end_date")
 
     def comment = column[String]("comment", O.Length(500))
 

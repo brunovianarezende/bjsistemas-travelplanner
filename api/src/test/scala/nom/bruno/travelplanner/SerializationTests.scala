@@ -8,7 +8,7 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization.write
 
 class SerializationTests extends FunSpec {
-  describe("deserialize ChangeUserData") {
+  describe("ChangeUserData") {
     implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
     it("must correctly deserialize roles") {
@@ -23,5 +23,4 @@ class SerializationTests extends FunSpec {
       }
     }
   }
-
 }

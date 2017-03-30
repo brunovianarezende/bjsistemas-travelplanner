@@ -71,6 +71,62 @@ class UserTests extends FunSpec {
       }
     }
 
+    describe("can see trips") {
+      describe("A NORMAL user") {
+        it("can see its own trips") {
+          assert(normal1.canSeeTripsFrom(normal1))
+        }
+
+        it("can't see other NORMAL users trips") {
+          assert(!normal1.canSeeTripsFrom(normal2))
+        }
+
+        it("can't see USER_MANAGER users trips") {
+          assert(!normal1.canSeeTripsFrom(um1))
+        }
+
+        it("can't see ADMIN users trips") {
+          assert(!normal1.canSeeTripsFrom(admin1))
+        }
+      }
+
+      describe("A USER_MANAGER user") {
+        it("can see its own trips") {
+          assert(um1.canSeeTripsFrom(um1))
+        }
+
+        it("can't see NORMAL users trips") {
+          assert(!um1.canSeeTripsFrom(normal1))
+        }
+
+        it("can't see other USER_MANAGER users trips") {
+          assert(!um1.canSeeTripsFrom(um2))
+        }
+
+        it("can't see ADMIN users trips") {
+          assert(!um1.canSeeTripsFrom(admin1))
+        }
+      }
+
+      describe("An ADMIN user") {
+        it("can see its own trips") {
+          assert(admin1.canSeeTripsFrom(admin1))
+        }
+
+        it("can see NORMAL users trips") {
+          assert(admin1.canSeeTripsFrom(normal1))
+        }
+
+        it("can see USER_MANAGER users trips") {
+          assert(admin1.canSeeTripsFrom(um1))
+        }
+
+        it("can see other ADMIN users trips") {
+          assert(admin1.canSeeTripsFrom(admin2))
+        }
+      }
+    }
+
     describe("change role or password") {
       describe("No kind of user") {
         it("can change its own role") {
@@ -147,7 +203,7 @@ class UserTests extends FunSpec {
     describe("can delete") {
       describe("No kind of user") {
         it("can delete itself") {
-          for(user <- Seq(admin1, um1, normal1)) {
+          for (user <- Seq(admin1, um1, normal1)) {
             assert(!user.canDelete(user))
           }
         }
@@ -155,7 +211,7 @@ class UserTests extends FunSpec {
 
       describe("A normal user") {
         it("can't delete any other user") {
-          for(user <- Seq(admin1, um1, normal1)) {
+          for (user <- Seq(admin1, um1, normal1)) {
             assert(!normal2.canDelete(user))
           }
         }

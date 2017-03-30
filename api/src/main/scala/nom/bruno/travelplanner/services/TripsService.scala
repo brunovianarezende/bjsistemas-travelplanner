@@ -1,6 +1,6 @@
 package nom.bruno.travelplanner.services
 
-import nom.bruno.travelplanner.Tables.{Trip, User, trips, users}
+import nom.bruno.travelplanner.Tables.{Trip, User, trips, users, datesMapper}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
