@@ -1,6 +1,7 @@
 package nom.bruno.travelplanner
 
 import java.security.MessageDigest
+import java.sql.Date
 import java.util.UUID
 
 import org.apache.commons.codec.binary.Hex
@@ -121,6 +122,27 @@ object Tables {
     def tupled = (Session.apply _).tupled
   }
 
+  case class Trip(id: Option[Int], destination: String, startDate: Date, endDate: Date, comment: String, userId: Int)
 
-  lazy val fullSchema = users.schema ++ sessions.schema
+  class Trips(tag: Tag) extends Table[Trip](tag, "trip") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+
+    def destination = column[String]("destination", O.Length(120))
+
+    def startDate = column[Date]("start_date")
+
+    def endDate = column[Date]("end_date")
+
+    def comment = column[String]("comment", O.Length(500))
+
+    def userId = column[Int]("user_id")
+
+    def user = foreignKey("TRP_USR_FK", userId, users)(_.id, onDelete = ForeignKeyAction.Cascade)
+
+    def * = (id.?, destination, startDate, endDate, comment, userId) <> (Trip.tupled, Trip.unapply)
+  }
+
+  val trips = TableQuery[Trips]
+
+  lazy val fullSchema = users.schema ++ sessions.schema ++ trips.schema
 }
