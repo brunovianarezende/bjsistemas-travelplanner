@@ -5,49 +5,28 @@ import java.net.HttpCookie
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.controllers._
 import org.json4s.jackson.JsonMethods.parse
-import slick.jdbc.MySQLProfile.api._
-
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 class LoginControllerTests extends BaseTravelPlannerStackTest {
-  def withUsers(testCode: => Any): Unit = {
-    val setupActions = DBIO.seq(
-      Tables.users ++= Seq(
-        Tables.User.withSaltedPassword("bla@bla.com", "password"),
-        Tables.User(None, "ble@bla.com", "passsword", "salt", Role.NORMAL) // no salt will be applied in this user password
-      )
-    )
-    Await.result(db.run(setupActions), Duration.Inf)
-    try {
-      testCode
-    }
-    finally {
-      val tearDownActions = DBIO.seq((Tables.users.delete))
-      Await.result(db.run(tearDownActions), Duration.Inf)
-    }
-  }
-
-
   feature("login") {
     scenario("successful login") {
       withUsers {
-        postAsJson("/login", LoginData("bla@bla.com", "password")) {
-          status should equal (200)
+        postAsJson("/login", LoginData(NORMAL2, PASSWORD)) {
+          status should equal(200)
           val result = parse(body).extract[Result[_]]
           result.success should be(true)
           val cookies = header.get("Set-Cookie")
           cookies should not be (None)
           val httpCookies = HttpCookie.parse(cookies.get)
-          httpCookies.size should be (1)
-          httpCookies.get(0).getName should be ("X-Session-Id")
+          httpCookies.size should be(1)
+          httpCookies.get(0).getName should be("X-Session-Id")
         }
       }
     }
 
     scenario("make sure salt is applied when doing comparison") {
-      withUsers {
-        postAsJson("/login", LoginData("ble@bla.com", "password")) {
+      val userWithNoSalt = Tables.User(None, "ble@bla.com", "passsword", "salt", Role.NORMAL)
+      withAdditionalUsers(Seq(userWithNoSalt)) {
+        postAsJson("/login", LoginData("ble@bla.com", PASSWORD)) {
           status should equal(401)
           val result = parse(body).extract[Result[_]]
           result.success should be(false)
@@ -58,7 +37,7 @@ class LoginControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("wrong password") {
       withUsers {
-        postAsJson("/login", LoginData("bla@bla.com", "wrongpassword")) {
+        postAsJson("/login", LoginData(NORMAL1, "wrongpassword")) {
           status should equal(401)
           val result = parse(body).extract[Result[_]]
           result.success should be(false)

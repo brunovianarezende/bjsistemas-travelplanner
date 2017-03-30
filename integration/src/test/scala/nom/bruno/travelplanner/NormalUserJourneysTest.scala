@@ -9,10 +9,6 @@ import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen
 
 class NormalUserJourneysTest extends BaseTravelPlannerStackTest with GivenWhenThen {
-  private[this] def authHeader(xSessionId: String) = {
-    Map("Cookie" -> s"X-Session-Id=$xSessionId")
-  }
-
   feature("user journey") {
     scenario("login, get user, logout, get user again") {
       val email = "brunore@email.com"
@@ -58,7 +54,7 @@ class NormalUserJourneysTest extends BaseTravelPlannerStackTest with GivenWhenTh
       }
 
       Then("he must not be able to get info about his user anymore")
-      get(s"/users/$email", headers = headers)(checkAuthenticationFailed)
+      get(s"/users/$email", headers = headers)(checkNotAuthenticatedError)
     }
   }
 

@@ -4,7 +4,7 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
   feature("get a single user trip") {
     scenario("get trip correctly")(pending)
     scenario("user not authenticated") {
-      get("/users/any@user.com/trips/1")(checkAuthenticationFailed)
+      get("/users/any@user.com/trips/1")(checkNotAuthenticatedError)
     }
     scenario("normal user can't get trip from other user")(pending)
     scenario("user manager can't get trip from other user")(pending)
@@ -14,7 +14,7 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
   feature("add trip") {
     scenario("add trip correctly")(pending)
     scenario("user not authenticated") {
-      post("/users/any@user.com/trips", "anything")(checkAuthenticationFailed)
+      post("/users/any@user.com/trips", "anything")(checkNotAuthenticatedError)
     }
     scenario("normal user can't add trips to other user")(pending)
     scenario("user manager can't add trips to other user")(pending)
@@ -25,7 +25,7 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
   feature("change trip") {
     scenario("change trip correctly")(pending)
     scenario("user not authenticated") {
-      put("/users/any@user.com/trips/1")(checkAuthenticationFailed)
+      put("/users/any@user.com/trips/1")(checkNotAuthenticatedError)
     }
     scenario("normal user can't change trips from other user")(pending)
     scenario("user manager can't change trips from other user")(pending)
@@ -36,7 +36,7 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
   feature("delete a trip") {
     scenario("delete trip correctly")(pending)
     scenario("user not authenticated") {
-      delete("/users/any@user.com/trips/1")(checkAuthenticationFailed)
+      delete("/users/any@user.com/trips/1")(checkNotAuthenticatedError)
     }
     scenario("normal user can't delete trips from other user")(pending)
     scenario("user manager can't delete trips from other user")(pending)
@@ -50,7 +50,7 @@ class TripsControllerSearchTests extends BaseTravelPlannerStackTest {
     scenario("user doesn't exist")(pending)
 
     scenario("user not authenticated") {
-      get("/users/any@user.com/trips")(checkAuthenticationFailed)
+      get("/users/any@user.com/trips")(checkNotAuthenticatedError)
     }
 
     scenario("normal user can't get trips from other user")(pending)
