@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.controllers
 
 class TripsControllerTests extends BaseTravelPlannerStackTest {
   feature("get a single user trip") {

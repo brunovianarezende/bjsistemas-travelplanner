@@ -1,6 +1,5 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.controllers
 
-import nom.bruno.travelplanner.controllers._
 import nom.bruno.travelplanner.services.AuthenticationService
 import org.json4s.jackson.JsonMethods.parse
 

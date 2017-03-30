@@ -1,9 +1,8 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.controllers
 
 import java.net.HttpCookie
 
 import nom.bruno.travelplanner.Tables.Role
-import nom.bruno.travelplanner.controllers._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen

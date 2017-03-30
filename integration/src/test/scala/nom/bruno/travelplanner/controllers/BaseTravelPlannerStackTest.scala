@@ -1,8 +1,8 @@
-package nom.bruno.travelplanner
+package nom.bruno.travelplanner.controllers
 
+import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role.Role
 import nom.bruno.travelplanner.Tables.{Role, User}
-import nom.bruno.travelplanner.controllers.{Error, ErrorCodes, Result, TravelPlannerStack}
 import org.json4s.Formats
 import org.json4s.jackson.JsonMethods.parse
 import org.json4s.jackson.Serialization.write
