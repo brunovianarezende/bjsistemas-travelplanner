@@ -1,5 +1,7 @@
 package nom.bruno.travelplanner.services
 
+import javax.inject.{Inject, Named}
+
 import nom.bruno.travelplanner.Tables.{Role, User, users}
 import nom.bruno.travelplanner.controllers.{ChangeUserData, Error, ErrorCodes, NewUserData}
 import slick.jdbc.JdbcBackend.Database
@@ -9,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.OptionT
 import scalaz.Scalaz._
 
-class UsersService(val db: Database)(implicit val executionContext: ExecutionContext) {
+class UsersService @Inject() (val db: Database)(@Named("EC") implicit val executionContext: ExecutionContext) {
   def getUsers(authUser: User): Future[Seq[User]] = {
     val query = authUser.role match {
       case Role.ADMIN => users.filter(user => user.role inSet List(Role.NORMAL, Role.USER_MANAGER, Role.ADMIN))

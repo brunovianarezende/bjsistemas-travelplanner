@@ -1,5 +1,7 @@
 package nom.bruno.travelplanner.controllers
 
+import com.google.inject.name.Names
+import com.google.inject.{AbstractModule, Guice}
 import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.Tables.Role.Role
 import nom.bruno.travelplanner.Tables.{Role, User}
@@ -86,8 +88,18 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
+
+    val module = new AbstractModule {
+      override def configure(): Unit = {
+        implicit def executor: ExecutionContext = Implicits.global
+
+        bind(classOf[Database]) toInstance (db)
+        bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(executor)
+      }
+    }
+
     for {
-      (servlet, path) <- TravelPlannerStack.servletInstances(db)
+      (servlet, path) <- TravelPlannerStack.servletInstances(Guice.createInjector(module))
     } addFilter(servlet, path)
     //    Await.result(db.run(DBIO.seq(Tables.fullSchema.create)), Duration.Inf)
   }

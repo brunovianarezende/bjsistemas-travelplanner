@@ -1,8 +1,9 @@
 package nom.bruno.travelplanner.controllers
 
+import javax.inject.Inject
+
 import nom.bruno.travelplanner.services.AuthenticationService
 import org.scalatra.AsyncResult
-import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -11,9 +12,7 @@ import scalaz.Scalaz._
 
 case class LoginData(email: String, password: String)
 
-class LoginController(val db: Database) extends TravelPlannerStack {
-  val authService = new AuthenticationService(db)
-
+class LoginController @Inject()(val authService: AuthenticationService) extends TravelPlannerStack {
   post("/login") {
     new AsyncResult() {
       val is = {

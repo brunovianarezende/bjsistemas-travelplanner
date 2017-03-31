@@ -10,8 +10,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class TripsControllerTests extends BaseTravelPlannerStackTest {
+  val usersService: UsersService = new UsersService(db)
+
   def addTrip(email: String, trip: Trip): Int = {
-    val usersService = new UsersService(db)
     val userOpt = Await.result(usersService.getUser(email), Duration.Inf)
     val tripsService = new TripsService(db)
     Await.result(tripsService.addTrip(trip.copy(userId = userOpt.flatMap(_.id).get)), Duration.Inf)

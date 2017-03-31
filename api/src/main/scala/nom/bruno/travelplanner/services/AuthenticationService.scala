@@ -1,16 +1,16 @@
 package nom.bruno.travelplanner.services
 
+import javax.inject.{Inject, Named}
+
 import nom.bruno.travelplanner.Tables.{Session, User, sessions}
-import nom.bruno.travelplanner.Tables
 import nom.bruno.travelplanner.controllers.LoginData
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthenticationService(val db: Database)(implicit val executionContext: ExecutionContext) {
+class AuthenticationService @Inject()(val db: Database, val usersService: UsersService)(@Named("EC") implicit val executionContext: ExecutionContext) {
   def authenticateUser(loginData: LoginData): Future[Option[User]] = {
-    val usersService = new UsersService(db)
     usersService.getUser(loginData.email) map {
       case Some(user) if user.checkPassword(loginData.password) => Some(user)
       case _ => None
@@ -22,7 +22,7 @@ class AuthenticationService(val db: Database)(implicit val executionContext: Exe
     var insertActions = DBIO.seq(
       sessions += newSession
     )
-    db.run(insertActions) map {_ =>
+    db.run(insertActions) map { _ =>
       newSession.sessionId
     }
   }

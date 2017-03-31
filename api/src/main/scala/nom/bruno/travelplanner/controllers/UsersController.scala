@@ -1,10 +1,11 @@
 package nom.bruno.travelplanner.controllers
 
+import javax.inject.Inject
+
 import nom.bruno.travelplanner.Tables.Role._
 import nom.bruno.travelplanner._
-import nom.bruno.travelplanner.services.UsersService
+import nom.bruno.travelplanner.services.{AuthenticationService, UsersService}
 import org.scalatra.AsyncResult
-import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -57,9 +58,8 @@ object ChangeUserData {
 
 }
 
-class UsersController(val db: Database) extends TravelPlannerStack with AuthenticationSupport {
-  val usersService = new UsersService(db)
-
+class UsersController @Inject()(val usersService: UsersService, val authService: AuthenticationService)
+  extends TravelPlannerStack with AuthenticationSupport {
   get("/users") {
     new AsyncResult {
       val is = {

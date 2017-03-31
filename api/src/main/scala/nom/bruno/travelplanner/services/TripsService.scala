@@ -1,12 +1,14 @@
 package nom.bruno.travelplanner.services
 
-import nom.bruno.travelplanner.Tables.{Trip, User, trips, users, datesMapper}
+import javax.inject.{Inject, Named}
+
+import nom.bruno.travelplanner.Tables.{Trip, User, datesMapper, trips, users}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TripsService(val db: Database)(implicit val executionContext: ExecutionContext) {
+class TripsService @Inject()(val db: Database)(@Named("EC") implicit val executionContext: ExecutionContext) {
   def getUserTrip(user: User, id: Int): Future[Option[Trip]] = {
     val q = trips.filter(_.userId === user.id).filter(_.id === id)
     db.run(q.result.headOption)

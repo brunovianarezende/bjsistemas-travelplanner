@@ -1,6 +1,6 @@
 package nom.bruno.travelplanner.controllers
 
-import nom.bruno.travelplanner.services.AuthenticationService
+import nom.bruno.travelplanner.services.{AuthenticationService, UsersService}
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.Await
@@ -14,7 +14,7 @@ class LogoutControllerTests extends BaseTravelPlannerStackTest {
           status should equal(200)
           val result = parse(body).extract[Result[_]]
           result.success should be(true)
-          val authenticationService = new AuthenticationService(db)
+          val authenticationService = new AuthenticationService(db, new UsersService(db))
           Await.result(authenticationService.getSessionUser(xSessionIdFor(ADMIN1)), Duration.Inf) should be(None)
         }
       }

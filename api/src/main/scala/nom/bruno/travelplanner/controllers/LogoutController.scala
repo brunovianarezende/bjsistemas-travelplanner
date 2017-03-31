@@ -1,14 +1,13 @@
 package nom.bruno.travelplanner.controllers
 
+import javax.inject.Inject
+
 import nom.bruno.travelplanner.services.AuthenticationService
 import org.scalatra.AsyncResult
-import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.Future
 
-class LogoutController(val db: Database) extends TravelPlannerStack {
-  val authService = new AuthenticationService(db)
-
+class LogoutController @Inject()(val authService: AuthenticationService) extends TravelPlannerStack {
   post("/logout") {
     new AsyncResult() {
       val is = {

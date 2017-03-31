@@ -18,7 +18,8 @@ val dependencies = libraryDependencies ++= Seq(
   "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
   "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "container",
   "mysql" % "mysql-connector-java" % "5.1.23",
-  "ch.qos.logback" % "logback-classic" % "1.1.5" % "runtime"
+  "ch.qos.logback" % "logback-classic" % "1.1.5" % "runtime",
+  "com.google.inject" % "guice" % "4.1.0"
 )
 
 val commonSettings = Seq(

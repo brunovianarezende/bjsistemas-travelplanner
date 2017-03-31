@@ -1,11 +1,11 @@
 package nom.bruno.travelplanner.controllers
 
 import java.time.LocalDate
+import javax.inject.Inject
 
 import nom.bruno.travelplanner.Tables.Trip
-import nom.bruno.travelplanner.services.{TripsService, UsersService}
+import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
 import org.scalatra.AsyncResult
-import slick.jdbc.JdbcBackend.Database
 
 import scala.util.{Success, Try}
 import scalaz.OptionT
@@ -19,9 +19,8 @@ object TripView {
   }
 }
 
-class TripsController(val db: Database) extends TravelPlannerStack with AuthenticationSupport {
-  val tripsService = new TripsService(db)
-  val usersService = new UsersService(db)
+class TripsController @Inject()(val tripsService: TripsService, val usersService: UsersService, val authService: AuthenticationService)
+  extends TravelPlannerStack with AuthenticationSupport {
 
   get("/users/:email/trips") {
     withLoginRequired { _ =>

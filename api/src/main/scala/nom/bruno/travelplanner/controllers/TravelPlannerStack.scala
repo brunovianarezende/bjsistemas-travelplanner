@@ -1,5 +1,8 @@
 package nom.bruno.travelplanner.controllers
 
+import javax.inject.{Inject, Named}
+
+import com.google.inject.Injector
 import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.utils.Json4sLocalDateSerializer
 import org.json4s.ext.EnumNameSerializer
@@ -7,15 +10,16 @@ import org.json4s.{DefaultFormats, Formats}
 import org.scalatra._
 import org.scalatra.json._
 import org.slf4j.LoggerFactory
-import slick.jdbc.JdbcBackend.Database
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 
 trait TravelPlannerStack extends ScalatraFilter with JacksonJsonSupport with FutureSupport {
   protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
-  protected implicit def executor: ExecutionContext = global
+  @Inject
+  @Named("EC") var ec: ExecutionContext = null
+
+  protected implicit def executor: ExecutionContext = ec
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -32,12 +36,12 @@ trait TravelPlannerStack extends ScalatraFilter with JacksonJsonSupport with Fut
 }
 
 object TravelPlannerStack {
-  def servletInstances(db: Database): Seq[(TravelPlannerStack, String)] = {
+  def servletInstances(injector: Injector): Seq[(TravelPlannerStack, String)] = {
     Seq(
-      (new UsersController(db), "/*"),
-      (new TripsController(db), "/*"),
-      (new LoginController(db), "/*"),
-      (new LogoutController(db), "/*")
+      (injector.getInstance(classOf[UsersController]), "/*"),
+      (injector.getInstance(classOf[TripsController]), "/*"),
+      (injector.getInstance(classOf[LoginController]), "/*"),
+      (injector.getInstance(classOf[LogoutController]), "/*")
     )
   }
 
