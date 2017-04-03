@@ -1,12 +1,21 @@
 package nom.bruno.travelplanner.controllers
 
-import nom.bruno.travelplanner.Tables.Role
+import nom.bruno.travelplanner.Tables.{Role, User}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class UsersControllerTests extends BaseTravelPlannerStackTest {
   feature("add users") {
     scenario("all ok") {
+      when(usersService.addUser(any())).thenReturn(Future {})
+      when(usersService.getUser(any())).thenReturn(Future {
+        None
+      })
       putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
         status should equal(200)
         parse(body).extract[Result[_]].success should be(true)
@@ -56,10 +65,10 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
     }
 
     scenario("user already registered") {
-      putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
-        status should equal(200)
-        parse(body).extract[Result[_]].success should be(true)
-      }
+      when(usersService.getUser(any())).thenReturn(Future {
+        Some(User.withSaltedPassword("brunore@email.com", "apassword"))
+      })
+
       putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
         status should equal(400)
         val result = parse(body).extract[Result[_]]
@@ -72,6 +81,10 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
   feature("get all users") {
     scenario("user authenticated") {
       withUsers {
+        when(usersService.getUsers(u(ADMIN1))).thenReturn(Future {
+          ALL_USERS.sortBy(_.email)
+        })
+
         get("/users", headers = authHeaderFor(ADMIN1)) {
           status should equal(200)
 
@@ -84,28 +97,18 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
             UserView(NORMAL2, Role.NORMAL)
           ).sortBy(_.email)))
         }
-        get("/users", headers = authHeaderFor(USER_MANAGER1)) {
-          status should equal(200)
-
-          parse(body).extract[Result[List[UserView]]].data should be(Some(List(
-            UserView(USER_MANAGER1, Role.USER_MANAGER),
-            UserView(USER_MANAGER2, Role.USER_MANAGER),
-            UserView(NORMAL1, Role.NORMAL),
-            UserView(NORMAL2, Role.NORMAL)
-          ).sortBy(_.email)))
-        }
-        get("/users", headers = authHeaderFor(NORMAL1)) {
-          status should equal(200)
-
-          parse(body).extract[Result[List[UserView]]].data should be(Some(List(
-            UserView(NORMAL1, Role.NORMAL)
-          )))
-        }
       }
     }
 
-    scenario("user not authenticated") {
+    scenario("user not authenticated - no header") {
       get("/users")(checkNotAuthenticatedError)
+    }
+
+    scenario("user not authenticated - expired header") {
+      when(authenticationService.getSessionUser(any())).thenReturn(Future {
+        None
+      })
+      get("/users", headers = authHeaderFor(ADMIN1))(checkNotAuthenticatedError)
     }
   }
 
@@ -115,37 +118,36 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
     }
 
     scenario("get own user") {
-      withUsers {
-        get(s"/users/$NORMAL1", headers = authHeaderFor(NORMAL1)) {
-          status should equal(200)
+      withUsers {}
+      get(s"/users/$NORMAL1", headers = authHeaderFor(NORMAL1)) {
+        status should equal(200)
 
-          parse(body).extract[Result[UserView]] should have(
-            'success (true),
-            'data (Some(UserView(NORMAL1, Role.NORMAL)))
-          )
-        }
-        get(s"/users/$USER_MANAGER1", headers = authHeaderFor(USER_MANAGER1)) {
-          status should equal(200)
+        parse(body).extract[Result[UserView]] should have(
+          'success (true),
+          'data (Some(UserView(NORMAL1, Role.NORMAL)))
+        )
+      }
+      get(s"/users/$USER_MANAGER1", headers = authHeaderFor(USER_MANAGER1)) {
+        status should equal(200)
 
-          parse(body).extract[Result[UserView]] should have(
-            'success (true),
-            'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
-          )
-        }
-        get(s"/users/$ADMIN1", headers = authHeaderFor(ADMIN1)) {
-          status should equal(200)
+        parse(body).extract[Result[UserView]] should have(
+          'success (true),
+          'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
+        )
+      }
+      get(s"/users/$ADMIN1", headers = authHeaderFor(ADMIN1)) {
+        status should equal(200)
 
-          parse(body).extract[Result[UserView]] should have(
-            'success (true),
-            'data (Some(UserView(ADMIN1, Role.ADMIN)))
-          )
-        }
+        parse(body).extract[Result[UserView]] should have(
+          'success (true),
+          'data (Some(UserView(ADMIN1, Role.ADMIN)))
+        )
       }
     }
 
     scenario("get other user") {
-      // for more detailed rules, please see nom.bruno.travelplanner.unit.UserTests#can see
       withUsers {
+        // for more detailed rules, please see nom.bruno.travelplanner.unit.UserTests#can see
         get(s"/users/$ADMIN1", headers = authHeaderFor(NORMAL1)) {
           status should equal(403)
 
@@ -194,10 +196,13 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
     }
   }
 
-  feature("Change user data") {
+  feature("change user data") {
     // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#change role or password
     scenario("a user can change its own password") {
       withUsers {
+        when(usersService.updateUser(any(), any())).thenReturn(Future {
+          1
+        })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword"), authHeaderFor(NORMAL1)) {
           status should equal(200)
           parse(body).extract[Result[_]] should have(
@@ -221,6 +226,9 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("a user manager can change normal users role's and password's") {
       withUsers {
+        when(usersService.updateUser(any(), any())).thenReturn(Future {
+          1
+        })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeaderFor(USER_MANAGER1)) {
           status should equal(200)
           parse(body).extract[Result[_]] should have(
@@ -256,6 +264,9 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("an admin can change other users role's and password's") {
       withUsers {
+        when(usersService.updateUser(any(), any())).thenReturn(Future {
+          1
+        })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeaderFor(ADMIN1)) {
           status should equal(200)
           parse(body).extract[Result[_]] should have(
@@ -360,18 +371,13 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("a user manager can delete normal users") {
       withUsers {
+        when(usersService.deleteUser(any())).thenReturn(Future {
+          1
+        })
         delete(s"/users/$NORMAL1", headers = authHeaderFor(USER_MANAGER1)) {
           status should be(200)
           parse(body).extract[Result[UserView]] should have(
             'success (true)
-          )
-        }
-
-        get(s"/users/$NORMAL1", headers = authHeaderFor(USER_MANAGER1)) {
-          status should equal(404)
-          parse(body).extract[Result[UserView]] should have(
-            'success (false),
-            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
           )
         }
       }
@@ -379,6 +385,9 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
 
     scenario("an admin can delete normal and user manager users") {
       withUsers {
+        when(usersService.deleteUser(any())).thenReturn(Future {
+          1
+        })
         for (user <- Seq(NORMAL1, USER_MANAGER1)) {
           delete(s"/users/$user", headers = authHeaderFor(ADMIN1)) {
             status should be(200)
@@ -386,20 +395,12 @@ class UsersControllerTests extends BaseTravelPlannerStackTest {
               'success (true)
             )
           }
-
-          get(s"/users/$user", headers = authHeaderFor(ADMIN1)) {
-            status should equal(404)
-            parse(body).extract[Result[UserView]] should have(
-              'success (false),
-              'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
-            )
-          }
         }
       }
     }
 
     scenario("user not authenticated") {
-      delete(s"/users/$NORMAL1") (checkNotAuthenticatedError)
+      delete(s"/users/$NORMAL1")(checkNotAuthenticatedError)
     }
 
     scenario("try to delete user that doesn't exist") {

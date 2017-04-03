@@ -8,7 +8,7 @@ val slickVersion = "3.2.0"
 val dependencies = libraryDependencies ++= Seq(
   "org.scalatra" %% "scalatra" % scalatraVersion,
   "org.scalatra" %% "scalatra-json" % scalatraVersion,
-  "org.scalatra" %% "scalatra-scalatest" % scalatraVersion % "test",
+  "org.scalatra" %% "scalatra-scalatest" % scalatraVersion % "test" exclude("org.mockito", "mockito-all"),
   "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
   "com.typesafe.slick" %% "slick" % slickVersion,
   "org.json4s" %% "json4s-jackson" % json4sVersion,
@@ -19,7 +19,8 @@ val dependencies = libraryDependencies ++= Seq(
   "org.eclipse.jetty" % "jetty-webapp" % "9.2.15.v20160210" % "container",
   "mysql" % "mysql-connector-java" % "5.1.23",
   "ch.qos.logback" % "logback-classic" % "1.1.5" % "runtime",
-  "com.google.inject" % "guice" % "4.1.0"
+  "com.google.inject" % "guice" % "4.1.0",
+  "org.mockito" % "mockito-core" % "2.7.21" % "test"
 )
 
 val commonSettings = Seq(

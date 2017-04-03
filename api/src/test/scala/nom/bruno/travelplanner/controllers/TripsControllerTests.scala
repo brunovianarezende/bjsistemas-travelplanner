@@ -3,27 +3,25 @@ package nom.bruno.travelplanner.controllers
 import java.time.LocalDate
 
 import nom.bruno.travelplanner.Tables.Trip
-import nom.bruno.travelplanner.services.{TripsService, UsersService}
 import org.json4s.jackson.JsonMethods.parse
+import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class TripsControllerTests extends BaseTravelPlannerStackTest {
-  val usersService: UsersService = new UsersService(db)
-
-  def addTrip(email: String, trip: Trip): Int = {
-    val userOpt = Await.result(usersService.getUser(email), Duration.Inf)
-    val tripsService = new TripsService(db)
-    Await.result(tripsService.addTrip(trip.copy(userId = userOpt.flatMap(_.id).get)), Duration.Inf)
-  }
 
   feature("get a single user trip") {
     scenario("get trip correctly") {
       withUsers {
-        val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
-          -1)
-        val id = addTrip(NORMAL1, trip)
+        val id = 1
+        val trip = Trip(Some(id), "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
+          u(NORMAL1).id.get)
+
+        when(tripsService.getUserTrip(u(NORMAL1), id)).thenReturn(Future {
+          Some(trip)
+        })
 
         get(s"/users/$NORMAL1/trips/$id", headers = authHeaderFor(NORMAL1)) {
           status should be(200)
@@ -44,14 +42,20 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
     }
 
     scenario("user not authenticated") {
+      when(authenticationService.getSessionUser(any())).thenReturn(Future {
+        None
+      })
       get("/users/any@user.com/trips/1")(checkNotAuthenticatedError)
     }
 
     scenario("normal user can't get trip from other user") {
       withUsers {
-        val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
-          -1)
-        val id = addTrip(NORMAL2, trip)
+        val id = 1
+        val trip = Trip(Some(id), "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
+          u(NORMAL2).id.get)
+        when(tripsService.getUserTrip(u(NORMAL2), id)).thenReturn(Future {
+          Some(trip)
+        })
 
         get(s"/users/$NORMAL2/trips/$id", headers = authHeaderFor(NORMAL1)) {
           status should be(404)
@@ -59,15 +63,19 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
             'success (false),
             'errors (Some(List(Error(ErrorCodes.INVALID_TRIP))))
           )
+          verify(tripsService, never()).getUserTrip(any(), any())
         }
       }
     }
 
     scenario("user manager can't get trip from other user") {
       withUsers {
-        val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
-          -1)
-        val id = addTrip(NORMAL2, trip)
+        val id = 1
+        val trip = Trip(Some(id), "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
+          u(NORMAL2).id.get)
+        when(tripsService.getUserTrip(u(NORMAL2), id)).thenReturn(Future {
+          Some(trip)
+        })
 
         get(s"/users/$NORMAL2/trips/$id", headers = authHeaderFor(USER_MANAGER1)) {
           status should be(404)
@@ -75,28 +83,38 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
             'success (false),
             'errors (Some(List(Error(ErrorCodes.INVALID_TRIP))))
           )
+          verify(tripsService, never()).getUserTrip(any(), any())
         }
       }
     }
 
     scenario("admin user get trip from other user") {
       withUsers {
-        val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
-          -1)
-        val id = addTrip(NORMAL1, trip)
+        val id = 1
+        val trip = Trip(Some(id), "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
+          u(NORMAL2).id.get)
+        when(tripsService.getUserTrip(u(NORMAL1), id)).thenReturn(Future {
+          Some(trip)
+        })
 
         get(s"/users/$NORMAL1/trips/$id", headers = authHeaderFor(ADMIN1)) {
           status should be(200)
           val result = parse(body).extract[Result[TripView]]
           result.success should be(true)
           result.data.get should be(TripView.from(trip.copy(id = Some(id))))
+          verify(tripsService, times(1)).getUserTrip(u(NORMAL1), id)
         }
       }
     }
 
     scenario("trip nor user exist") {
       withUsers {
-        get(s"/users/$NORMAL1/trips/1", headers = authHeaderFor(ADMIN1)) {
+        val id = 1
+        when(tripsService.getUserTrip(u(NORMAL1), id)).thenReturn(Future {
+          None
+        })
+
+        get(s"/users/$NORMAL1/trips/$id", headers = authHeaderFor(ADMIN1)) {
           status should be(404)
           parse(body).extract[Result[Error]] should have(
             'success (false),
