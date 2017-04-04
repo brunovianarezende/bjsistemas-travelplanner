@@ -10,8 +10,6 @@ import scala.util.{Failure, Success, Try}
 import scalaz.OptionT
 import scalaz.Scalaz._
 
-case class LoginData(email: String, password: String)
-
 class LoginController @Inject()(val authService: AuthenticationService) extends TravelPlannerStack {
   post("/login") {
     new AsyncResult() {

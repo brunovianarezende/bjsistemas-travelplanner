@@ -11,14 +11,6 @@ import scala.util.{Success, Try}
 import scalaz.OptionT
 import scalaz.Scalaz._
 
-case class TripView(id: String, destination: String, start_date: LocalDate, end_date: LocalDate, comment: String)
-
-object TripView {
-  def from(trip: Trip): TripView = {
-    TripView(trip.id.get.toString, trip.destination, trip.startDate, trip.endDate, trip.comment)
-  }
-}
-
 class TripsController @Inject()(val tripsService: TripsService, val usersService: UsersService, val authService: AuthenticationService)
   extends TravelPlannerStack with AuthenticationSupport {
 

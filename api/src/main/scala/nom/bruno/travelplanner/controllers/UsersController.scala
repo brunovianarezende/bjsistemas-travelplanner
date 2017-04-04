@@ -13,54 +13,6 @@ import scala.util.{Failure, Success, Try}
 import scalaz.OptionT
 import scalaz.Scalaz._
 
-case class UserView(email: String, role: Role)
-
-object UserView {
-  def apply(user: Tables.User): UserView = {
-    UserView(user.email, user.role)
-  }
-}
-
-case class NewUserData(password: String, password_confirmation: String)
-
-case class ChangeUserData(password: Option[String], password_confirmation: Option[String], role: Option[Role]) {
-  def schemaOk(): Boolean = {
-    passwordFieldsAreOk && atLeastOneChangeIsDefined
-  }
-
-  private[this] def passwordFieldsAreOk = {
-    (password.isDefined && password_confirmation.isDefined) ||
-      (!password.isDefined && !password_confirmation.isDefined)
-  }
-
-  private[this] def atLeastOneChangeIsDefined = {
-    (password.isDefined && password_confirmation.isDefined) || role.isDefined
-  }
-
-  def isPasswordChange: Boolean = {
-    password.isDefined && password_confirmation.isDefined
-  }
-
-  def isRoleChange: Boolean = {
-    role.isDefined
-  }
-}
-
-object ChangeUserData {
-  def create(password: String, passwordConfirmation: String): ChangeUserData = {
-    apply(Some(password), Some(passwordConfirmation), None)
-  }
-
-  def create(password: String, passwordConfirmation: String, role: Role): ChangeUserData = {
-    apply(Some(password), Some(passwordConfirmation), Some(role))
-  }
-
-  def create(role: Role): ChangeUserData = {
-    apply(None, None, Some(role))
-  }
-
-}
-
 class UsersController @Inject()(val usersService: UsersService, val authService: AuthenticationService)
   extends TravelPlannerStack with AuthenticationSupport {
   get("/users") {
