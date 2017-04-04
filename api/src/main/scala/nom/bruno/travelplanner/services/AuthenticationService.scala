@@ -3,16 +3,15 @@ package nom.bruno.travelplanner.services
 import javax.inject.{Inject, Named}
 
 import nom.bruno.travelplanner.Tables.{Session, User, sessions}
-import nom.bruno.travelplanner.controllers.LoginData
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthenticationService @Inject()(val db: Database, val usersService: UsersService)(@Named("EC") implicit val executionContext: ExecutionContext) {
-  def authenticateUser(loginData: LoginData): Future[Option[User]] = {
-    usersService.getUser(loginData.email) map {
-      case Some(user) if user.checkPassword(loginData.password) => Some(user)
+  def authenticateUser(email: String, password: String): Future[Option[User]] = {
+    usersService.getUser(email) map {
+      case Some(user) if user.checkPassword(password) => Some(user)
       case _ => None
     }
   }

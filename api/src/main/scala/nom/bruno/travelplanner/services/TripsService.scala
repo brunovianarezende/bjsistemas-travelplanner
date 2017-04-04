@@ -2,7 +2,7 @@ package nom.bruno.travelplanner.services
 
 import javax.inject.{Inject, Named}
 
-import nom.bruno.travelplanner.Tables.{Trip, User, datesMapper, trips, users}
+import nom.bruno.travelplanner.Tables.{Trip, User, datesMapper, trips}
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 

@@ -164,7 +164,7 @@ class UsersController @Inject()(val usersService: UsersService, val authService:
                   case Left(error) if Set(ErrorCodes.CANT_CHANGE_PASSWORD, ErrorCodes.CANT_CHANGE_ROLE) contains error.code => Forbidden(error)
                   case Left(error) => BadRequest(error)
                   case Right(userToChange) => {
-                    usersService.updateUser(userToChange, changeUserData) map (_ => Ok())
+                    usersService.updateUser(userToChange, changeUserData.password, changeUserData.role) map (_ => Ok())
                   }
                 }
               }

@@ -200,7 +200,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
     // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#change role or password
     scenario("a user can change its own password") {
       withUsers {
-        when(usersService.updateUser(any(), any())).thenReturn(Future {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
           1
         })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword"), authHeaderFor(NORMAL1)) {
@@ -226,7 +226,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
 
     scenario("a user manager can change normal users role's and password's") {
       withUsers {
-        when(usersService.updateUser(any(), any())).thenReturn(Future {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
           1
         })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeaderFor(USER_MANAGER1)) {
@@ -264,7 +264,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
 
     scenario("an admin can change other users role's and password's") {
       withUsers {
-        when(usersService.updateUser(any(), any())).thenReturn(Future {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
           1
         })
         postAsJson(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER), authHeaderFor(ADMIN1)) {

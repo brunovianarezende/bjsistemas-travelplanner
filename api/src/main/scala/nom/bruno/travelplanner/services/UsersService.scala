@@ -2,8 +2,8 @@ package nom.bruno.travelplanner.services
 
 import javax.inject.{Inject, Named}
 
+import nom.bruno.travelplanner.Tables.Role.Role
 import nom.bruno.travelplanner.Tables.{Role, User, users}
-import nom.bruno.travelplanner.controllers.ChangeUserData
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
@@ -30,19 +30,17 @@ class UsersService @Inject()(val db: Database)(@Named("EC") implicit val executi
     db.run(insertActions)
   }
 
-  def updateUser(user: User, diff: ChangeUserData): Future[Int] = {
+  def updateUser(user: User, optPassword: Option[String], optRole: Option[Role]): Future[Int] = {
     val q = for {
       u <- users if u.id === user.id
     } yield {
       (u.password, u.role)
     }
-    val password = if (diff.isPasswordChange) {
-      user.encodePassword(diff.password.get)
+    val password = optPassword match {
+      case Some(s) => user.encodePassword(s)
+      case None => user.password
     }
-    else {
-      user.password
-    }
-    val updateAction = q.update((password, diff.role.getOrElse(user.role)))
+    val updateAction = q.update((password, optRole.getOrElse(user.role)))
     db.run(updateAction)
   }
 

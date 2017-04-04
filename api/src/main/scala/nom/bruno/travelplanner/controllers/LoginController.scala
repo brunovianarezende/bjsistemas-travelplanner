@@ -19,7 +19,7 @@ class LoginController @Inject()(val authService: AuthenticationService) extends 
         Try(parsedBody.extract[LoginData]) match {
           case Success(loginData) => {
             (for {
-              user <- OptionT(authService.authenticateUser(loginData))
+              user <- OptionT(authService.authenticateUser(loginData.email, loginData.password))
               sessionId <- authService.createNewSession(user).liftM[OptionT]
             }
               yield {

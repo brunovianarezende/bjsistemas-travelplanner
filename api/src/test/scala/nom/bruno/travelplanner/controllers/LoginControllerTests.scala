@@ -12,7 +12,7 @@ class LoginControllerTests extends BaseApiTravelPlannerStackTest {
   feature("login") {
     scenario("successful login") {
       withUsers {
-        when(authenticationService.authenticateUser(LoginData(NORMAL2, PASSWORD))).thenReturn(Future {
+        when(authenticationService.authenticateUser(NORMAL2, PASSWORD)).thenReturn(Future {
           Some(u(NORMAL2))
         })
         when(authenticationService.createNewSession(u(NORMAL2))).thenReturn(Future {
@@ -34,7 +34,7 @@ class LoginControllerTests extends BaseApiTravelPlannerStackTest {
     scenario("wrong password") {
       withUsers {
         val data = LoginData(NORMAL1, "wrongpassword")
-        when(authenticationService.authenticateUser(data)).thenReturn(Future {
+        when(authenticationService.authenticateUser(data.email, data.password)).thenReturn(Future {
           None
         })
         postAsJson("/login", data) {
@@ -48,7 +48,7 @@ class LoginControllerTests extends BaseApiTravelPlannerStackTest {
 
     scenario("email doesn't exist") {
       val data = LoginData("brunore@email.com", "apassword")
-      when(authenticationService.authenticateUser(data)).thenReturn(Future {
+      when(authenticationService.authenticateUser(data.email, data.password)).thenReturn(Future {
         None
       })
       postAsJson("/login", data) {
