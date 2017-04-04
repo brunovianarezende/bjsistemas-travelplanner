@@ -9,7 +9,7 @@ import org.mockito.Mockito._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UsersControllerTests extends BaseTravelPlannerStackTest {
+class UsersControllerTests extends BaseApiTravelPlannerStackTest {
   feature("add users") {
     scenario("all ok") {
       when(usersService.addUser(any())).thenReturn(Future {})

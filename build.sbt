@@ -50,6 +50,6 @@ lazy val integration = (project in file("integration"))
   )
   .settings(commonSettings: _*)
   .settings(dependencies)
-  .dependsOn(api)
+  .dependsOn(api % "compile->compile;test->test")
 
 onLoad in Global := (onLoad in Global).value andThen (Command.process("project api", _))

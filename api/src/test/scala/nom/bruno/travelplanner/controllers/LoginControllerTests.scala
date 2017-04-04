@@ -8,7 +8,7 @@ import org.mockito.Mockito._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LoginControllerTests extends BaseTravelPlannerStackTest {
+class LoginControllerTests extends BaseApiTravelPlannerStackTest {
   feature("login") {
     scenario("successful login") {
       withUsers {

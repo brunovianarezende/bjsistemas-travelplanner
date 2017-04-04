@@ -4,21 +4,16 @@ import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice, Module}
 import nom.bruno.travelplanner.Tables.{Role, User}
 import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
-import org.json4s.Formats
 import org.json4s.jackson.JsonMethods.parse
-import org.json4s.jackson.Serialization.write
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, reset, when}
 import org.scalatest.BeforeAndAfterEach
-import org.scalatra.test.scalatest.ScalatraFeatureSpec
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
-  protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
-
+trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAfterEach {
   val ADMIN1 = "admin1@users.com"
   val ADMIN2 = "admin2@users.com"
   val USER_MANAGER1 = "usermanager1@users.com"
@@ -115,23 +110,6 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
 
   def xSessionIdFor(email: String) = {
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + email takeRight (32)
-  }
-
-  def putAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    put[A](uri, jsonBytes(body), headers) {
-      f
-    }
-  }
-
-  private[this] def jsonBytes[B <: AnyRef, A](body: B) = {
-    write(body).getBytes("UTF-8")
-  }
-
-  def postAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    val newHeaders = Map("Content-Type" -> "application/json") ++ headers
-    post[A](uri, write(body).getBytes("UTF-8"), newHeaders) {
-      f
-    }
   }
 
   def checkNotAuthenticatedError: Any = {

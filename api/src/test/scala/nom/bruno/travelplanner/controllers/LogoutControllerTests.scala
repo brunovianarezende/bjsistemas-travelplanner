@@ -7,7 +7,7 @@ import org.mockito.Mockito._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class LogoutControllerTests extends BaseTravelPlannerStackTest {
+class LogoutControllerTests extends BaseApiTravelPlannerStackTest {
   feature("logout") {
     scenario("successful logout") {
       withUsers {

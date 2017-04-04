@@ -3,13 +3,10 @@ package nom.bruno.travelplanner.controllers
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice}
 import nom.bruno.travelplanner.Tables
+import nom.bruno.travelplanner.Tables.Role
 import nom.bruno.travelplanner.Tables.Role.Role
-import nom.bruno.travelplanner.Tables.{Role, User}
-import org.json4s.Formats
 import org.json4s.jackson.JsonMethods.parse
-import org.json4s.jackson.Serialization.write
 import org.scalatest.BeforeAndAfterEach
-import org.scalatra.test.scalatest.ScalatraFeatureSpec
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.MySQLProfile.api._
 
@@ -17,10 +14,8 @@ import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfterEach {
+trait BaseIntegrationTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAfterEach {
   protected implicit def executor: ExecutionContext = Implicits.global
-
-  protected implicit val jsonFormats: Formats = TravelPlannerStack.jsonFormats
 
   lazy val db = Database.forConfig("mysql")
 
@@ -80,12 +75,6 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
     )
   }
 
-  def withAdditionalUsers(users: Seq[User])(testCode: => Any): Unit = {
-    val newActions = Seq(Tables.users ++= users)
-    val actions = defaultSetupActions ++ newActions
-    setupRunTestCodeAndTearDown(actions, testCode)
-  }
-
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
@@ -114,23 +103,6 @@ trait BaseTravelPlannerStackTest extends ScalatraFeatureSpec with BeforeAndAfter
     super.beforeEach()
     val cleanUpActions = DBIO.seq((Tables.users.delete))
     Await.result(db.run(cleanUpActions), Duration.Inf)
-  }
-
-  def putAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    put[A](uri, jsonBytes(body), headers) {
-      f
-    }
-  }
-
-  private[this] def jsonBytes[B <: AnyRef, A](body: B) = {
-    write(body).getBytes("UTF-8")
-  }
-
-  def postAsJson[A, B <: AnyRef](uri: String, body: B, headers: Iterable[(String, String)] = Seq.empty)(f: => A): A = {
-    val newHeaders = Map("Content-Type" -> "application/json") ++ headers
-    post[A](uri, write(body).getBytes("UTF-8"), newHeaders) {
-      f
-    }
   }
 
   def checkNotAuthenticatedError: Any = {

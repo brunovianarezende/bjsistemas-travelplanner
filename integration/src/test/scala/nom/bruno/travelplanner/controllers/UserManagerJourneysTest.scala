@@ -7,7 +7,7 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.GivenWhenThen
 
-class UserManagerJourneysTest extends BaseTravelPlannerStackTest with GivenWhenThen {
+class UserManagerJourneysTest extends BaseIntegrationTravelPlannerStackTest with GivenWhenThen {
   feature("user manager journeys") {
     scenario("user manager changes data of a normal user") {
       withUsers {

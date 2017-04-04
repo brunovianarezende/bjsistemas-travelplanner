@@ -10,7 +10,7 @@ import org.mockito.Mockito._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TripsControllerTests extends BaseTravelPlannerStackTest {
+class TripsControllerTests extends BaseApiTravelPlannerStackTest {
 
   feature("get a single user trip") {
     scenario("get trip correctly") {
@@ -178,7 +178,7 @@ class TripsControllerTests extends BaseTravelPlannerStackTest {
   }
 }
 
-class TripsControllerSearchTests extends BaseTravelPlannerStackTest {
+class TripsControllerSearchTests extends BaseApiTravelPlannerStackTest {
   feature("search trip") {
     scenario("user doesn't exist")(pending)
 
