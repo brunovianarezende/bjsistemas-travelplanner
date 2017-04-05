@@ -23,6 +23,16 @@ val dependencies = libraryDependencies ++= Seq(
   "org.mockito" % "mockito-core" % "2.7.21" % "test"
 )
 
+val akkaHttpVersion = "10.0.5"
+
+val akkaDependencies = libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test",
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+  "com.google.inject" % "guice" % "4.1.0"
+)
+
 val commonSettings = Seq(
   organization := "nom.bruno",
   version := "0.1.0-SNAPSHOT",
@@ -31,11 +41,13 @@ val commonSettings = Seq(
 )
 
 lazy val baseTravelPlanner = (project in file("."))
+  .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
-  .aggregate(api, integration)
+  .aggregate(api, integration, apiAkka)
 
 lazy val api = (project in file("api"))
   .enablePlugins(JettyPlugin)
+  .disablePlugins(RevolverPlugin)
   .settings(name := "api")
   .settings(commonSettings: _*)
   .settings(dependencies)
@@ -44,6 +56,7 @@ lazy val api = (project in file("api"))
 
 lazy val integration = (project in file("integration"))
   .enablePlugins(JettyPlugin)
+  .disablePlugins(RevolverPlugin)
   .settings(
     name := "integration",
     parallelExecution in Test := false
@@ -51,5 +64,9 @@ lazy val integration = (project in file("integration"))
   .settings(commonSettings: _*)
   .settings(dependencies)
   .dependsOn(api % "compile->compile;test->test")
+
+lazy val apiAkka = (project in file("api-akka-http"))
+  .settings(commonSettings: _*)
+  .settings(akkaDependencies)
 
 onLoad in Global := (onLoad in Global).value andThen (Command.process("project api", _))
