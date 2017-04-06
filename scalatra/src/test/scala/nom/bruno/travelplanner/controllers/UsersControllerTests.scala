@@ -20,6 +20,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
       putAsJson("/users/brunore@email.com", NewUserData("apassword", "apassword")) {
         status should equal(200)
         parse(body).extract[Result[_]].success should be(true)
+        verify(usersService, times(1)).getUser(any())
       }
     }
 

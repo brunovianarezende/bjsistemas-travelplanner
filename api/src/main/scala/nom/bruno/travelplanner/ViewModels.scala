@@ -63,6 +63,7 @@ object ChangeUserData {
 }
 
 object ErrorCodes {
+  val INTERNAL_ERROR = 0
   val MISSING_FIELDS = 1
   val USER_ALREADY_REGISTERED = 2
   val INVALID_EMAIL = 3
