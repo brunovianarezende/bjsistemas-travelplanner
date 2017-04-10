@@ -120,30 +120,31 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
     }
 
     scenario("get own user") {
-      withUsers {}
-      get(s"/users/$NORMAL1", headers = authHeaderFor(NORMAL1)) {
-        status should equal(200)
+      withUsers {
+        get(s"/users/$NORMAL1", headers = authHeaderFor(NORMAL1)) {
+          status should equal(200)
 
-        parse(body).extract[Result[UserView]] should have(
-          'success (true),
-          'data (Some(UserView(NORMAL1, Role.NORMAL)))
-        )
-      }
-      get(s"/users/$USER_MANAGER1", headers = authHeaderFor(USER_MANAGER1)) {
-        status should equal(200)
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(NORMAL1, Role.NORMAL)))
+          )
+        }
+        get(s"/users/$USER_MANAGER1", headers = authHeaderFor(USER_MANAGER1)) {
+          status should equal(200)
 
-        parse(body).extract[Result[UserView]] should have(
-          'success (true),
-          'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
-        )
-      }
-      get(s"/users/$ADMIN1", headers = authHeaderFor(ADMIN1)) {
-        status should equal(200)
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(USER_MANAGER1, Role.USER_MANAGER)))
+          )
+        }
+        get(s"/users/$ADMIN1", headers = authHeaderFor(ADMIN1)) {
+          status should equal(200)
 
-        parse(body).extract[Result[UserView]] should have(
-          'success (true),
-          'data (Some(UserView(ADMIN1, Role.ADMIN)))
-        )
+          parse(body).extract[Result[UserView]] should have(
+            'success (true),
+            'data (Some(UserView(ADMIN1, Role.ADMIN)))
+          )
+        }
       }
     }
 

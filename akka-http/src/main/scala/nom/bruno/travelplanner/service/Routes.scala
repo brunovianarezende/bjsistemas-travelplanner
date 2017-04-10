@@ -6,12 +6,13 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
+import akka.http.scaladsl.server.{Directive1, _}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
-import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.services.UsersService
-import nom.bruno.travelplanner.{Error, ErrorCodes, NewUserData, Result}
+import nom.bruno.travelplanner.Tables.{Role, User}
+import nom.bruno.travelplanner.services.{AuthenticationService, UsersService}
+import nom.bruno.travelplanner.utils.CustomJsonFormats._
+import nom.bruno.travelplanner.{ChangeUserData, Error, ErrorCodes, NewUserData, Result, UserView}
 import spray.json.{DefaultJsonProtocol, JsonFormat}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -21,11 +22,20 @@ import scala.util.{Failure, Success}
 trait JsonProtocol extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val newUserDataFormat = jsonFormat2(NewUserData.apply)
   implicit val errorFormat = jsonFormat1(Error.apply)
+  implicit val roleFormat = jsonEnum(Role)
+  implicit val changeUserDataFormata = jsonFormat3(ChangeUserData.apply)
+  implicit val userViewFormat = jsonFormat2(UserView.apply)
 
   implicit def resultFomat[T: JsonFormat] = jsonFormat3(Result.apply[T])
 }
 
 case class TPRejection(statusCode: StatusCode, errors: List[Error]) extends Rejection
+
+object TPRejection {
+  def apply(statusCode: StatusCode, error: Error): TPRejection = {
+    TPRejection(statusCode, List(error))
+  }
+}
 
 class HaltException(val statusCode: StatusCode, val errors: List[Error]) extends Exception
 
@@ -40,11 +50,27 @@ object HaltException {
 }
 
 
-class Routes @Inject()(val usersService: UsersService)(@Named("EC") implicit val ec: ExecutionContext)
+class Routes @Inject()(val usersService: UsersService, val authService: AuthenticationService)(@Named("EC") implicit val ec: ExecutionContext)
   extends JsonProtocol {
 
   def entityTP[T](um: FromRequestUnmarshaller[T]): Directive1[T] = {
     entity(um).recover(rejections => reject(TPRejection(StatusCodes.BadRequest, List(Error(ErrorCodes.BAD_SCHEMA)))))
+  }
+
+  def authenticate: Directive1[User] = {
+    def failure = reject(TPRejection(StatusCodes.Unauthorized, Error(ErrorCodes.USER_NOT_AUTHENTICATED)))
+
+    optionalCookie("X-Session-Id") flatMap {
+      case Some(cookiePair) => {
+        val sessionId = cookiePair.value
+        onSuccess(authService.getSessionUser(sessionId)) flatMap {
+          case Some(user) => provide(user)
+          case _ => failure
+        }
+
+      }
+      case _ => failure
+    }
   }
 
   def completeTP[T](future: => Future[T])(implicit m: ToResponseMarshaller[T]): Route = {
@@ -63,7 +89,9 @@ class Routes @Inject()(val usersService: UsersService)(@Named("EC") implicit val
     }
     .result()
 
-  val Ok = Result[Unit](true, None, None)
+  def Ok = Result[Unit](true, None, None)
+
+  def Ok[T](content: T) = Result[T](true, Some(content), None)
 
   val routes = handleRejections(rejectionHandler) {
     pathPrefix("users" / """.+""".r) { email =>
@@ -83,11 +111,22 @@ class Routes @Inject()(val usersService: UsersService)(@Named("EC") implicit val
               }
             }
         }
-      }
+      } ~
+        (get & authenticate) { authUser =>
+          completeTP {
+            usersService.getUser(email) map {
+              case Some(user) if authUser.canSee(user) => Ok(UserView(user))
+              case Some(user) => throw HaltException(StatusCodes.Forbidden, Error(ErrorCodes.INVALID_USER))
+              case None => throw HaltException(StatusCodes.NotFound, Error(ErrorCodes.INVALID_USER))
+            }
+          }
+        }
     }
   }
 
-  private[this] def validateNewUser(email: String, newUserData: NewUserData): Future[Either[Error, User]] = {
+  private[this] def validateNewUser(email: String, newUserData: NewUserData): Future[Either[Error, User]]
+
+  = {
     if (!validateEmail(email)) {
       Future {
         Left(Error(ErrorCodes.INVALID_EMAIL))
