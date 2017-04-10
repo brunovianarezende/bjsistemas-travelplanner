@@ -3,9 +3,9 @@ package nom.bruno.travelplanner.service
 import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.google.inject.name.Names
-import com.google.inject.{AbstractModule, Guice, Provides}
+import com.google.inject.{AbstractModule, Guice}
 import nom.bruno.travelplanner.Tables.{Role, User}
-import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
+import nom.bruno.travelplanner.services.{TripsService, UsersService}
 import nom.bruno.travelplanner.{Error, ErrorCodes, Result}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, reset, when}
@@ -45,7 +45,6 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
   var ALL_USERS: List[User] = List.empty
 
   val usersService: UsersService = mock(classOf[UsersService])
-  val authenticationService: AuthenticationService = mock(classOf[AuthenticationService])
   val tripsService: TripsService = mock(classOf[TripsService])
 
   private val injector = Guice.createInjector(new AbstractModule {
@@ -55,7 +54,6 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
       import scala.concurrent.ExecutionContext.Implicits.global
       bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(global)
       bind(classOf[UsersService]).toInstance(usersService)
-      bind(classOf[AuthenticationService]).toInstance(authenticationService)
       bind(classOf[TripsService]).toInstance(tripsService)
 
       requestInjection(Directives)
@@ -67,7 +65,7 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
 
   def withUsers(testCode: => Any): Unit = {
     val allUsers = mutable.ArrayBuffer.empty[User]
-    when(authenticationService.getSessionUser(any())).thenReturn(Future {
+    when(usersService.getSessionUser(any())).thenReturn(Future {
       None
     })
     when(usersService.getUser(any())).thenReturn(Future {
@@ -76,7 +74,7 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
     for (email <- Seq(NORMAL1, USER_MANAGER1, ADMIN1)) {
       val user = u(email)
       allUsers += user
-      when(authenticationService.getSessionUser(xSessionIdFor(email))).thenReturn(Future {
+      when(usersService.getSessionUser(xSessionIdFor(email))).thenReturn(Future {
         Some(user)
       })
       when(usersService.getUser(email)).thenReturn(Future {
@@ -97,7 +95,7 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
   override def beforeEach(): Unit = {
     super.beforeEach()
     ALL_USERS = List.empty
-    reset(usersService, authenticationService, tripsService)
+    reset(usersService, tripsService)
   }
 
   def authHeader(xSessionId: String) = {

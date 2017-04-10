@@ -4,6 +4,7 @@ import nom.bruno.travelplanner.Tables.{Role, User}
 import nom.bruno.travelplanner._
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 
@@ -21,6 +22,9 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
         status should equal(200)
         parse(body).extract[Result[_]].success should be(true)
         verify(usersService, times(1)).getUser(any())
+        val captor: ArgumentCaptor[User] = ArgumentCaptor.forClass(classOf[User])
+        verify(usersService, times(1)).addUser(captor.capture())
+        captor.getValue.email should be("brunore@email.com")
       }
     }
 
@@ -83,7 +87,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
   feature("get all users") {
     scenario("user authenticated") {
       withUsers {
-        when(usersService.getUsers(u(ADMIN1))).thenReturn(Future {
+        when(usersService.getUsersVisibleFor(u(ADMIN1))).thenReturn(Future {
           ALL_USERS.sortBy(_.email)
         })
 
@@ -107,7 +111,7 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
     }
 
     scenario("user not authenticated - expired header") {
-      when(authenticationService.getSessionUser(any())).thenReturn(Future {
+      when(usersService.getSessionUser(any())).thenReturn(Future {
         None
       })
       get("/users", headers = authHeaderFor(ADMIN1))(checkNotAuthenticatedError)

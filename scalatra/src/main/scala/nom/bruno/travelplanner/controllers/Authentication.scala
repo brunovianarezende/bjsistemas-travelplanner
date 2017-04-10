@@ -1,8 +1,8 @@
 package nom.bruno.travelplanner.controllers
 
-import nom.bruno.travelplanner.{Error, ErrorCodes}
 import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.services.AuthenticationService
+import nom.bruno.travelplanner.services.UsersService
+import nom.bruno.travelplanner.{Error, ErrorCodes}
 import org.scalatra.ScalatraBase
 
 import scala.concurrent.ExecutionContext
@@ -12,7 +12,7 @@ import scalaz.Scalaz._
 trait AuthenticationSupport extends ScalatraBase {
   protected implicit def executor: ExecutionContext
 
-  def authService: AuthenticationService
+  def usersService: UsersService
 
   // we won't use scentry for the authentication. We'll store our session nonce in the database and since slick needs
   // every thing to be async we can't rely on it (scentry). Also, the `before` filter in scalatra can't handle futures,
@@ -22,7 +22,7 @@ trait AuthenticationSupport extends ScalatraBase {
     cookies.get("X-Session-Id") match {
       case Some(sessionId) => {
         (for {
-          user <- OptionT(authService.getSessionUser(sessionId))} yield {
+          user <- OptionT(usersService.getSessionUser(sessionId))} yield {
           f(user)
         }).getOrElse(halt(Unauthorized(Error(ErrorCodes.USER_NOT_AUTHENTICATED))))
       }

@@ -1,18 +1,16 @@
 package nom.bruno.travelplanner.controllers
 
-import java.time.LocalDate
 import javax.inject.Inject
 
-import nom.bruno.travelplanner.Tables.Trip
+import nom.bruno.travelplanner.services.{TripsService, UsersService}
 import nom.bruno.travelplanner.{Error, ErrorCodes, TripView}
-import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
 import org.scalatra.AsyncResult
 
 import scala.util.{Success, Try}
 import scalaz.OptionT
 import scalaz.Scalaz._
 
-class TripsController @Inject()(val tripsService: TripsService, val usersService: UsersService, val authService: AuthenticationService)
+class TripsController @Inject()(val tripsService: TripsService, val usersService: UsersService)
   extends TravelPlannerStack with AuthenticationSupport {
 
   get("/users/:email/trips") {

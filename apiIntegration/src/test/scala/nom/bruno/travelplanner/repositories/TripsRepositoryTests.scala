@@ -1,4 +1,4 @@
-package nom.bruno.travelplanner.services
+package nom.bruno.travelplanner.repositories
 
 import java.sql.Date
 import java.time.LocalDate
@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-class TripsServiceTests extends FunSuite with BeforeAndAfterAll with BeforeAndAfterEach {
+class TripsRepositoryTests extends FunSuite with BeforeAndAfterAll with BeforeAndAfterEach {
   val logger = LoggerFactory.getLogger(getClass)
 
   protected implicit def executor: ExecutionContext = Implicits.global
@@ -48,9 +48,9 @@ class TripsServiceTests extends FunSuite with BeforeAndAfterAll with BeforeAndAf
   }
 
   test("add trip") {
-    val tripsService = new TripsService(db)
+    val tripsRepository = new TripsRepository(db)
     val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place", user1.id.get)
-    val id = Await.result(tripsService.addTrip(trip), Duration.Inf)
+    val id = Await.result(tripsRepository.addTrip(trip), Duration.Inf)
     assert(id > 0)
     val expectedTrip = trip.copy(id = Some(id))
     val allTrips = Await.result(db.run(Tables.trips.result), Duration.Inf)
@@ -58,28 +58,28 @@ class TripsServiceTests extends FunSuite with BeforeAndAfterAll with BeforeAndAf
   }
 
   test("get trip") {
-    val tripsService = new TripsService(db)
+    val tripsRepository = new TripsRepository(db)
     val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place", user1.id.get)
-    val id = Await.result(tripsService.addTrip(trip), Duration.Inf)
+    val id = Await.result(tripsRepository.addTrip(trip), Duration.Inf)
     assert(id > 0)
     val expectedTrip = trip.copy(id = Some(id))
-    val retrievedTrip = Await.result(tripsService.getUserTrip(user1, id), Duration.Inf)
+    val retrievedTrip = Await.result(tripsRepository.getUserTrip(user1, id), Duration.Inf)
     assert(retrievedTrip.contains(expectedTrip))
   }
 
   test("get trip - doesn't exist") {
-    val tripsService = new TripsService(db)
-    val retrievedTrip = Await.result(tripsService.getUserTrip(user2, 0), Duration.Inf)
+    val tripsRepository = new TripsRepository(db)
+    val retrievedTrip = Await.result(tripsRepository.getUserTrip(user2, 0), Duration.Inf)
     assert(retrievedTrip.isEmpty)
   }
 
   test("get trip - from different user") {
-    val tripsService = new TripsService(db)
+    val tripsRepository = new TripsRepository(db)
     val trip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
       user1.id.get)
-    val id = Await.result(tripsService.addTrip(trip), Duration.Inf)
+    val id = Await.result(tripsRepository.addTrip(trip), Duration.Inf)
     assert(id > 0)
-    val retrievedTrip = Await.result(tripsService.getUserTrip(user2, id), Duration.Inf)
+    val retrievedTrip = Await.result(tripsRepository.getUserTrip(user2, id), Duration.Inf)
     assert(retrievedTrip.isEmpty)
   }
 
@@ -87,28 +87,28 @@ class TripsServiceTests extends FunSuite with BeforeAndAfterAll with BeforeAndAf
   test("search trips")(pending)
 
   test("update trip") {
-    val tripsService = new TripsService(db)
+    val tripsRepository = new TripsRepository(db)
     val baseTrip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
       user1.id.get)
-    val id = Await.result(tripsService.addTrip(baseTrip), Duration.Inf)
+    val id = Await.result(tripsRepository.addTrip(baseTrip), Duration.Inf)
     assert(id > 0)
 
 
     val updatedTrip = Trip(Some(id), "Other place", LocalDate.of(2017, 1, 2), LocalDate.of(2017, 1, 14),
       "not so nice place", user1.id.get)
-    Await.result(tripsService.updateTrip(updatedTrip), Duration.Inf)
+    Await.result(tripsRepository.updateTrip(updatedTrip), Duration.Inf)
 
     val allTrips = Await.result(db.run(Tables.trips.result), Duration.Inf)
     assert(allTrips == Seq(updatedTrip))
   }
 
   test("delete trip") {
-    val tripsService = new TripsService(db)
+    val tripsRepository = new TripsRepository(db)
     val baseTrip = Trip(None, "Belo Horizonte", LocalDate.of(2017, 1, 1), LocalDate.of(2017, 1, 15), "nice place",
       user1.id.get)
-    val id = Await.result(tripsService.addTrip(baseTrip), Duration.Inf)
+    val id = Await.result(tripsRepository.addTrip(baseTrip), Duration.Inf)
 
-    Await.result(tripsService.deleteTrip(baseTrip.copy(id = Some(id))), Duration.Inf)
+    Await.result(tripsRepository.deleteTrip(baseTrip.copy(id = Some(id))), Duration.Inf)
 
     val allTrips = Await.result(db.run(Tables.trips.result), Duration.Inf)
     assert(allTrips.isEmpty)

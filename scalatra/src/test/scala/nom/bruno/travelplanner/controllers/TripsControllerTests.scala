@@ -44,7 +44,7 @@ class TripsControllerTests extends BaseApiTravelPlannerStackTest {
     }
 
     scenario("user not authenticated") {
-      when(authenticationService.getSessionUser(any())).thenReturn(Future {
+      when(usersService.getSessionUser(any())).thenReturn(Future {
         None
       })
       get("/users/any@user.com/trips/1")(checkNotAuthenticatedError)

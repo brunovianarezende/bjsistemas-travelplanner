@@ -9,7 +9,8 @@ import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server.{Directive1, Rejection, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.services.AuthenticationService
+import nom.bruno.travelplanner.repositories.SessionsRepository
+import nom.bruno.travelplanner.services.UsersService
 import nom.bruno.travelplanner.{Error, ErrorCodes}
 
 import scala.concurrent.Future
@@ -17,7 +18,7 @@ import scala.util.{Failure, Success}
 
 object Directives {
   @Inject
-  var authService: AuthenticationService = null;
+  var usersService: UsersService = null;
 
   case class TPRejection(statusCode: StatusCode, errors: List[Error]) extends Rejection
 
@@ -37,7 +38,7 @@ object Directives {
     optionalCookie("X-Session-Id") flatMap {
       case Some(cookiePair) => {
         val sessionId = cookiePair.value
-        onSuccess(authService.getSessionUser(sessionId)) flatMap {
+        onSuccess(usersService.getSessionUser(sessionId)) flatMap {
           case Some(user) => provide(user)
           case _ => failure
         }

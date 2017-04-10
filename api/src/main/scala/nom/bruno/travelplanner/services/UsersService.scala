@@ -3,49 +3,61 @@ package nom.bruno.travelplanner.services
 import javax.inject.{Inject, Named}
 
 import nom.bruno.travelplanner.Tables.Role.Role
-import nom.bruno.travelplanner.Tables.{Role, User, users}
-import slick.jdbc.JdbcBackend.Database
-import slick.jdbc.MySQLProfile.api._
+import nom.bruno.travelplanner.Tables.{Role, User}
+import nom.bruno.travelplanner.repositories.{SessionsRepository, UsersRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scalaz.OptionT
+import scalaz.Scalaz._
 
-class UsersService @Inject()(val db: Database)(@Named("EC") implicit val executionContext: ExecutionContext) {
-  def getUsers(authUser: User): Future[Seq[User]] = {
-    val query = authUser.role match {
-      case Role.ADMIN => users.filter(user => user.role inSet List(Role.NORMAL, Role.USER_MANAGER, Role.ADMIN))
-      case Role.USER_MANAGER => users.filter(user => user.role inSet List(Role.NORMAL, Role.USER_MANAGER))
-      case _ => users.filter(_.id === authUser.id)
+class UsersService @Inject()(usersRepository: UsersRepository, sessionsRepository: SessionsRepository)
+                            (@Named("EC") implicit val executionContext: ExecutionContext) {
+  def loginUser(email: String, password: String): Future[Option[String]] = {
+    (for {
+      user <- OptionT(authenticateUser(email, password))
+      sessionId <- sessionsRepository.createNewSession(user).liftM[OptionT]
     }
-    db.run(query.sortBy(_.email).result)
+      yield {
+        sessionId
+      }).run
   }
 
-  def getAllUsers: Future[Seq[User]] = db.run(users.result)
+  private[this] def authenticateUser(email: String, password: String): Future[Option[User]] = {
+    getUser(email) map {
+      case Some(user) if user.checkPassword(password) => Some(user)
+      case _ => None
+    }
+  }
 
-  def getUser(email: String): Future[Option[User]] = db.run(users.filter(_.email === email).result.headOption)
+  def getSessionUser(sessionId: String): Future[Option[User]] = {
+    sessionsRepository.getSessionUser(sessionId)
+  }
+
+  def finishSession(sessionId: String): Future[Unit] = {
+    sessionsRepository.deleteSession(sessionId) map { _ => }
+  }
+
+  def getUsersVisibleFor(authUser: User): Future[Seq[User]] = {
+    authUser.role match {
+      case Role.ADMIN => usersRepository.getUsersByRoles(Seq(Role.NORMAL, Role.USER_MANAGER, Role.ADMIN))
+      case Role.USER_MANAGER => usersRepository.getUsersByRoles(Seq(Role.NORMAL, Role.USER_MANAGER))
+      case _ => usersRepository.getUser(authUser.email) map (_.toSeq)
+    }
+  }
+
+  def getUser(email: String): Future[Option[User]] = {
+    usersRepository.getUser(email)
+  }
 
   def addUser(user: User): Future[Unit] = {
-    val insertActions = DBIO.seq(
-      users += user
-    )
-    db.run(insertActions)
+    usersRepository.addUser(user)
   }
 
   def updateUser(user: User, optPassword: Option[String], optRole: Option[Role]): Future[Int] = {
-    val q = for {
-      u <- users if u.id === user.id
-    } yield {
-      (u.password, u.role)
-    }
-    val password = optPassword match {
-      case Some(s) => user.encodePassword(s)
-      case None => user.password
-    }
-    val updateAction = q.update((password, optRole.getOrElse(user.role)))
-    db.run(updateAction)
+    usersRepository.updateUser(user, optPassword, optRole)
   }
 
   def deleteUser(user: User): Future[Int] = {
-    val q = users.filter(_.id === user.id)
-    db.run(q.delete)
+    usersRepository.deleteUser(user)
   }
 }

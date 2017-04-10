@@ -3,7 +3,6 @@ import javax.servlet.ServletContext
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice}
 import nom.bruno.travelplanner.controllers.TravelPlannerStack
-import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
 import org.scalatra._
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.{Database, DatabaseDef}

@@ -2,9 +2,9 @@ package nom.bruno.travelplanner.controllers
 
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice, Module}
-import nom.bruno.travelplanner.{Error, ErrorCodes, Result}
 import nom.bruno.travelplanner.Tables.{Role, User}
-import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
+import nom.bruno.travelplanner.services.{TripsService, UsersService}
+import nom.bruno.travelplanner.{Error, ErrorCodes, Result}
 import org.json4s.jackson.JsonMethods.parse
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{mock, reset, when}
@@ -46,7 +46,7 @@ trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAft
 
   def withUsers(testCode: => Any): Unit = {
     val allUsers = mutable.ArrayBuffer.empty[User]
-    when(authenticationService.getSessionUser(any())).thenReturn(Future {
+    when(usersService.getSessionUser(any())).thenReturn(Future {
       None
     })
     when(usersService.getUser(any())).thenReturn(Future {
@@ -55,7 +55,7 @@ trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAft
     for (email <- Seq(NORMAL1, USER_MANAGER1, ADMIN1)) {
       val user = u(email)
       allUsers += user
-      when(authenticationService.getSessionUser(xSessionIdFor(email))).thenReturn(Future {
+      when(usersService.getSessionUser(xSessionIdFor(email))).thenReturn(Future {
         Some(user)
       })
       when(usersService.getUser(email)).thenReturn(Future {
@@ -74,7 +74,6 @@ trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAft
   }
 
   val usersService: UsersService = mock(classOf[UsersService])
-  val authenticationService: AuthenticationService = mock(classOf[AuthenticationService])
   val tripsService: TripsService = mock(classOf[TripsService])
 
   override protected def beforeAll(): Unit = {
@@ -88,7 +87,6 @@ trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAft
     new AbstractModule {
       override def configure(): Unit = {
         bind(classOf[UsersService]).toInstance(usersService)
-        bind(classOf[AuthenticationService]).toInstance(authenticationService)
         bind(classOf[TripsService]).toInstance(tripsService)
         bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(global)
       }
@@ -98,7 +96,7 @@ trait BaseApiTravelPlannerStackTest extends TravelPlannerTests with BeforeAndAft
   override def beforeEach(): Unit = {
     super.beforeEach()
     ALL_USERS = List.empty
-    reset(usersService, authenticationService, tripsService)
+    reset(usersService, tripsService)
   }
 
   def authHeader(xSessionId: String) = {
