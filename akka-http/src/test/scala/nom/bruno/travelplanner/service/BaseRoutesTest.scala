@@ -3,7 +3,7 @@ package nom.bruno.travelplanner.service
 import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.google.inject.name.Names
-import com.google.inject.{AbstractModule, Guice}
+import com.google.inject.{AbstractModule, Guice, Provides}
 import nom.bruno.travelplanner.Tables.{Role, User}
 import nom.bruno.travelplanner.services.{AuthenticationService, TripsService, UsersService}
 import nom.bruno.travelplanner.{Error, ErrorCodes, Result}
@@ -57,6 +57,8 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
       bind(classOf[UsersService]).toInstance(usersService)
       bind(classOf[AuthenticationService]).toInstance(authenticationService)
       bind(classOf[TripsService]).toInstance(tripsService)
+
+      requestInjection(Directives)
     }
   })
 
