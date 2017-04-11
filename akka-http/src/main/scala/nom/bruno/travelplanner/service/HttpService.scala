@@ -22,7 +22,7 @@ object HttpService extends App {
     }
   })
 
-  private val routesService = injector.getInstance(classOf[Routes])
+  private val routesService = injector.getInstance(classOf[AllRoutes])
 
   implicit val system: ActorSystem = ActorSystem()
 

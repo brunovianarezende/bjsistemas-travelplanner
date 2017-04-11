@@ -60,8 +60,7 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
     }
   })
 
-  protected val routesService = injector.getInstance(classOf[Routes])
-
+  protected val routesService = injector.getInstance(classOf[AllRoutes])
 
   def withUsers(testCode: => Any): Unit = {
     val allUsers = mutable.ArrayBuffer.empty[User]
