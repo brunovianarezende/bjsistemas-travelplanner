@@ -53,8 +53,6 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
       bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(global)
       bind(classOf[UsersService]).toInstance(usersService)
       bind(classOf[TripsService]).toInstance(tripsService)
-
-      requestInjection(Directives)
     }
   })
 

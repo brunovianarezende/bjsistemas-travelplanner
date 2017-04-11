@@ -17,8 +17,6 @@ object HttpService extends App {
   private val injector = Guice.createInjector(new AbstractModule {
     override def configure(): Unit = {
       bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(global)
-
-      requestInjection(Directives)
     }
   })
 

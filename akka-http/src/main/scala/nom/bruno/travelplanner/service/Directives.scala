@@ -19,9 +19,6 @@ import scala.util.{Failure, Success}
 object Directives {
   val logger = LoggerFactory.getLogger(getClass)
 
-  @Inject
-  var usersService: UsersService = null;
-
   case class TPRejection(statusCode: StatusCode, errors: List[Error]) extends Rejection
 
   object TPRejection {
@@ -38,7 +35,7 @@ object Directives {
     entity(um).recover(rejections => reject(TPRejection(StatusCodes.BadRequest, List(Error(ErrorCodes.BAD_SCHEMA)))))
   }
 
-  def authenticate: Directive1[User] = {
+  def authenticate(implicit usersService: UsersService): Directive1[User] = {
     def failure = reject(TPRejection(StatusCodes.Unauthorized, Error(ErrorCodes.USER_NOT_AUTHENTICATED)))
 
     optionalCookie("X-Session-Id") flatMap {
