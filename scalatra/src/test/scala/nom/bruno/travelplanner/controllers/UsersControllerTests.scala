@@ -421,7 +421,6 @@ class UsersControllerTests extends BaseApiTravelPlannerStackTest {
         }
       }
     }
-
   }
 
 }

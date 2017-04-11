@@ -77,6 +77,21 @@ class Routes @Inject()(val usersService: UsersService, val validationService: Va
               }
             }
           }
+        } ~
+        (delete & authenticate) { authUser =>
+          completeTP {
+            for {
+              validationResult <- validationService.validateDeleteUser(authUser, email)
+            } yield {
+              validationResult match {
+                case Left(error) if error.code == ErrorCodes.INVALID_USER => halt(StatusCodes.NotFound, error)
+                case Left(error) => halt(StatusCodes.Forbidden, error)
+                case Right(userToDelete) => {
+                  usersService.deleteUser(userToDelete) map (_ => Ok())
+                }
+              }
+            }
+          }
         }
     }
   }

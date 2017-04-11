@@ -340,4 +340,88 @@ class UserRoutesTest extends BaseRoutesTest {
       }
     }
   }
+
+  feature("delete user") {
+    // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#delete
+    scenario("no user can delete itself") {
+      withUsers {
+        for (user <- Seq(ADMIN1, USER_MANAGER1, NORMAL1)) {
+          Delete(s"/users/$user").addHeader(authHeaderFor(user)) ~>
+            routesService.routes ~> check {
+            status.intValue should be(403)
+            responseAs[Result[Unit]] should have(
+              'success (false),
+              'errors (Some(List(Error(ErrorCodes.CANT_DELETE_USER))))
+            )
+          }
+        }
+      }
+    }
+
+    scenario("a normal user can't delete any other user") {
+      withUsers {
+        for (user <- Seq(ADMIN1, USER_MANAGER1, NORMAL2)) {
+          Delete(s"/users/$user").addHeader(authHeaderFor(NORMAL1)) ~>
+            routesService.routes ~> check {
+            status.intValue should be(403)
+            responseAs[Result[Unit]] should have(
+              'success (false),
+              'errors (Some(List(Error(ErrorCodes.CANT_DELETE_USER))))
+            )
+          }
+        }
+      }
+    }
+
+    scenario("a user manager can delete normal users") {
+      withUsers {
+        when(usersService.deleteUser(any())).thenReturn(Future {
+          1
+        })
+        Delete(s"/users/$NORMAL1").addHeader(authHeaderFor(USER_MANAGER1)) ~>
+          routesService.routes ~> check {
+          status.intValue should be(200)
+          responseAs[Result[Unit]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("an admin can delete normal and user manager users") {
+      withUsers {
+        when(usersService.deleteUser(any())).thenReturn(Future {
+          1
+        })
+        for (user <- Seq(NORMAL1, USER_MANAGER1)) {
+          Delete(s"/users/$user").addHeader(authHeaderFor(ADMIN1)) ~>
+            routesService.routes ~> check {
+            status.intValue should be(200)
+            responseAs[Result[Unit]] should have(
+              'success (true)
+            )
+          }
+        }
+      }
+    }
+
+    scenario("user not authenticated") {
+      Delete(s"/users/$NORMAL1") ~>
+        routesService.routes ~> check(checkNotAuthenticatedError)
+    }
+
+    scenario("try to delete user that doesn't exist") {
+      withUsers {
+        Delete("/users/idontexist@users.com").addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(404)
+          responseAs[Result[Unit]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
+  }
+
 }
