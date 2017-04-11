@@ -12,6 +12,7 @@ import org.mockito.Mockito.{mock, reset, when}
 import org.scalatest.{BeforeAndAfterEach, FeatureSpec, Matchers}
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest with JsonProtocol with BeforeAndAfterEach {
@@ -49,9 +50,6 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
 
   private val injector = Guice.createInjector(new AbstractModule {
     override def configure(): Unit = {
-      // there is an annoying bug in intellij that will wrongly highlight all the checks as compilation errors if we
-      // import global at the top of the file, so I'll import it here.
-      import scala.concurrent.ExecutionContext.Implicits.global
       bind(classOf[ExecutionContext]).annotatedWith(Names.named("EC")).toInstance(global)
       bind(classOf[UsersService]).toInstance(usersService)
       bind(classOf[TripsService]).toInstance(tripsService)
@@ -60,7 +58,7 @@ trait BaseRoutesTest extends FeatureSpec with Matchers with ScalatestRouteTest w
     }
   })
 
-  protected val routesService = injector.getInstance(classOf[AllRoutes])
+  val routesService = injector.getInstance(classOf[AllRoutes])
 
   def withUsers(testCode: => Any): Unit = {
     val allUsers = mutable.ArrayBuffer.empty[User]

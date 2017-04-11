@@ -8,7 +8,6 @@ import akka.http.scaladsl.server._
 import nom.bruno.travelplanner._
 import nom.bruno.travelplanner.service.Directives._
 
-
 trait BaseRoutes extends JsonProtocol {
 
   def rejectionHandler = RejectionHandler.newBuilder()
@@ -30,9 +29,12 @@ trait BaseRoutes extends JsonProtocol {
 
 class AllRoutes @Inject()(
                            userRoutes: UserRoutes,
-                           logoutRoute: LogoutRoute
+                           logoutRoute: LogoutRoute,
+                           loginRoute: LoginRoute
                          ) extends BaseRoutes {
   def routes = handleRejections(rejectionHandler) {
-    userRoutes.routes ~ logoutRoute.routes
+    userRoutes.routes ~
+      logoutRoute.routes ~
+      loginRoute.routes
   }
 }

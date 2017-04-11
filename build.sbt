@@ -1,9 +1,14 @@
 import org.scalatra.sbt._
-import sbt.Keys.{libraryDependencies, name, parallelExecution}
+import sbt.Keys.{libraryDependencies, parallelExecution}
 
 val scalatraVersion = "2.5.0"
 val json4sVersion = "3.5.1"
 val slickVersion = "3.2.0"
+
+val logDependencies = libraryDependencies ++= Seq(
+  "org.slf4j" % "slf4j-api" % "1.7.25",
+  "ch.qos.logback" % "logback-classic" % "1.2.3"
+)
 
 val dependencies = libraryDependencies ++= Seq(
   "org.scalatra" %% "scalatra" % scalatraVersion,
@@ -70,6 +75,7 @@ lazy val scalatra = (project in file("scalatra"))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
   .settings(dependencies)
+  .settings(logDependencies)
   .settings(ScalatraPlugin.scalatraSettings: _*)
   .settings(debugPort in Jetty := 5005)
   .dependsOn(commonResources)
@@ -89,6 +95,7 @@ lazy val scalatraIntegration = (project in file("scalatraIntegration"))
 lazy val akkaHttp = (project in file("akka-http"))
   .settings(commonSettings: _*)
   .settings(akkaDependencies)
+  .settings(logDependencies)
   .dependsOn(commonResources)
   .dependsOn(api)
 

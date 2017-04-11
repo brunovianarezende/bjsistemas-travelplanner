@@ -6,16 +6,19 @@ import akka.http.scaladsl.marshalling.ToResponseMarshaller
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
-import akka.http.scaladsl.server.{Directive1, Rejection, Route}
+import akka.http.scaladsl.server.{Directive1, Rejection, Route, StandardRoute}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import nom.bruno.travelplanner.Tables.User
 import nom.bruno.travelplanner.services.UsersService
 import nom.bruno.travelplanner.{Error, ErrorCodes}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 object Directives {
+  val logger = LoggerFactory.getLogger(getClass)
+
   @Inject
   var usersService: UsersService = null;
 
@@ -25,6 +28,10 @@ object Directives {
     def apply(statusCode: StatusCode, error: Error): TPRejection = {
       TPRejection(statusCode, List(error))
     }
+  }
+
+  def rejectTP(statusCode: StatusCode, error: Error): StandardRoute = {
+    reject(TPRejection(statusCode, List(error)))
   }
 
   def entityTP[T](um: FromRequestUnmarshaller[T]): Directive1[T] = {
@@ -52,7 +59,10 @@ object Directives {
       case Success(res) => complete(res)
       case Failure(exception) => exception match {
         case halt: HaltException => reject(TPRejection(halt.statusCode, halt.errors))
-        case _ => reject(TPRejection(StatusCodes.InternalServerError, List(Error(ErrorCodes.INTERNAL_ERROR))))
+        case _ => {
+          logger.warn("Error", exception)
+          reject(TPRejection(StatusCodes.InternalServerError, List(Error(ErrorCodes.INTERNAL_ERROR))))
+        }
       }
     }
   }
