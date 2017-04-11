@@ -28,8 +28,11 @@ trait BaseRoutes extends JsonProtocol {
   def routes: Route
 }
 
-class AllRoutes @Inject()(userRoutes: UserRoutes) extends BaseRoutes {
+class AllRoutes @Inject()(
+                           userRoutes: UserRoutes,
+                           logoutRoute: LogoutRoute
+                         ) extends BaseRoutes {
   def routes = handleRejections(rejectionHandler) {
-    userRoutes.routes
+    userRoutes.routes ~ logoutRoute.routes
   }
 }
