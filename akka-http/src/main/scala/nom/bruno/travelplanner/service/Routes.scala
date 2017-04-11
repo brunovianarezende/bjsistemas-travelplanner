@@ -2,12 +2,12 @@ package nom.bruno.travelplanner.service
 
 import javax.inject.{Inject, Named}
 
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
+import nom.bruno.travelplanner._
 import nom.bruno.travelplanner.service.Directives._
 import nom.bruno.travelplanner.services.{UsersService, ValidationService}
-import nom.bruno.travelplanner._
 
 import scala.concurrent.ExecutionContext
 
@@ -27,6 +27,10 @@ class Routes @Inject()(val usersService: UsersService, val validationService: Va
 
   def Ok[T](content: T) = Result[T](true, Some(content), None)
 
+  private[this] def halt(statusCode: StatusCode, error: Error) = {
+    throw HaltException(statusCode, error)
+  }
+
   val routes = handleRejections(rejectionHandler) {
     pathPrefix("users" / """.+""".r) { email =>
       put {
@@ -37,7 +41,7 @@ class Routes @Inject()(val usersService: UsersService, val validationService: Va
                 validationResult <- validationService.validateNewUser(email, newUserData)
               } yield {
                 validationResult match {
-                  case Left(error) => throw HaltException(StatusCodes.BadRequest, error)
+                  case Left(error) => halt(StatusCodes.BadRequest, error)
                   case Right(newUser) => {
                     usersService.addUser(newUser) map (_ => Ok)
                   }
@@ -50,8 +54,27 @@ class Routes @Inject()(val usersService: UsersService, val validationService: Va
           completeTP {
             usersService.getUser(email) map {
               case Some(user) if authUser.canSee(user) => Ok(UserView(user))
-              case Some(user) => throw HaltException(StatusCodes.Forbidden, Error(ErrorCodes.INVALID_USER))
-              case None => throw HaltException(StatusCodes.NotFound, Error(ErrorCodes.INVALID_USER))
+              case Some(user) => halt(StatusCodes.Forbidden, Error(ErrorCodes.INVALID_USER))
+              case None => halt(StatusCodes.NotFound, Error(ErrorCodes.INVALID_USER))
+            }
+          }
+        } ~
+        (post & authenticate) { authUser =>
+          entityTP(as[ChangeUserData]) { changeUserData =>
+            completeTP {
+              val forbiddenErrors = Set(ErrorCodes.CANT_CHANGE_PASSWORD, ErrorCodes.CANT_CHANGE_ROLE)
+              for {
+                validationResult <- validationService.validateChangeUser(authUser, email, changeUserData)
+              } yield {
+                validationResult match {
+                  case Left(error) if error.code == ErrorCodes.INVALID_USER => halt(StatusCodes.NotFound, error)
+                  case Left(error) if forbiddenErrors contains error.code => halt(StatusCodes.Forbidden, error)
+                  case Left(error) => halt(StatusCodes.BadRequest, error)
+                  case Right(userToChange) => {
+                    usersService.updateUser(userToChange, changeUserData.password, changeUserData.role) map (_ => Ok())
+                  }
+                }
+              }
             }
           }
         }

@@ -7,7 +7,7 @@ import nom.bruno.travelplanner._
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito.{when, _}
-import org.scalatest.FeatureSpec
+import spray.json.pimpAny
 
 import scala.concurrent.Future
 
@@ -174,6 +174,162 @@ class UserRoutesTest extends BaseRoutesTest {
     scenario("email not found") {
       withUsers {
         Get("/users/idontexist@bla.com").addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(404)
+          responseAs[Result[UserView]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.INVALID_USER))))
+          )
+        }
+      }
+    }
+  }
+
+  feature("change user data") {
+    // for more detailed permission rules, please see nom.bruno.travelplanner.unit.UserTests#change role or password
+    scenario("a user can change its own password") {
+      withUsers {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
+          1
+        })
+        Post(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword")).addHeader(authHeaderFor(NORMAL1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(200)
+          responseAs[Result[Unit]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("a user can't change its own role") {
+      withUsers {
+        Post(s"/users/$USER_MANAGER1", ChangeUserData.create(Role.NORMAL)).addHeader(authHeaderFor(USER_MANAGER1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(403)
+          responseAs[Result[Unit]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_ROLE))))
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can change normal users role's and password's") {
+      withUsers {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
+          1
+        })
+        Post(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER)).addHeader(authHeaderFor(USER_MANAGER1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(200)
+          responseAs[Result[Unit]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can't change admins' role") {
+      withUsers {
+        Post(s"/users/$ADMIN1", ChangeUserData.create(Role.USER_MANAGER)).addHeader(authHeaderFor(USER_MANAGER1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(403)
+          responseAs[Result[Unit]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_ROLE))))
+          )
+        }
+      }
+    }
+
+    scenario("a user manager can't change admins' password") {
+      withUsers {
+        Post(s"/users/$ADMIN1", ChangeUserData.create("newpassword", "newpassword")).addHeader(authHeaderFor(USER_MANAGER1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(403)
+          responseAs[Result[Unit]] should have(
+            'success (false),
+            'errors (Some(List(Error(ErrorCodes.CANT_CHANGE_PASSWORD))))
+          )
+        }
+      }
+    }
+
+    scenario("an admin can change other users role's and password's") {
+      withUsers {
+        when(usersService.updateUser(any(), any(), any())).thenReturn(Future {
+          1
+        })
+        Post(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "newpassword", Role.USER_MANAGER)).addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(200)
+          responseAs[Result[Unit]] should have(
+            'success (true)
+          )
+        }
+        Post(s"/users/$USER_MANAGER1", ChangeUserData.create("newpassword", "newpassword", Role.ADMIN)).addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(200)
+          responseAs[Result[Unit]] should have(
+            'success (true)
+          )
+        }
+      }
+    }
+
+    scenario("invalid new password") {
+      withUsers {
+        Post(s"/users/$NORMAL1", ChangeUserData.create("abc", "abc")).addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(400)
+          val result = responseAs[Result[Unit]]
+          result.success should be(false)
+          result.errors.get should be(List(Error(ErrorCodes.INVALID_PASSWORD)))
+        }
+      }
+    }
+
+    scenario("wrong confirmation") {
+      withUsers {
+        Post(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk")).addHeader(authHeaderFor(ADMIN1)) ~>
+          routesService.routes ~> check {
+          status.intValue should equal(400)
+          val result = responseAs[Result[Unit]]
+          result.success should be(false)
+          result.errors.get should be(List(Error(ErrorCodes.INVALID_PASSWORD_CONFIRMATION)))
+        }
+      }
+    }
+
+    scenario("user not authenticated") {
+      withUsers {
+        Post(s"/users/$NORMAL1", ChangeUserData.create("newpassword", "jkjkjkjjkjkjk")) ~>
+          routesService.routes ~> check(checkNotAuthenticatedError)
+      }
+    }
+
+    scenario("bad schema") {
+      withUsers {
+        for (badInput <- List(ChangeUserData(None, None, None).toJson,
+          ChangeUserData(Some("password"), None, None).toJson,
+          ChangeUserData(None, Some("confirmation"), None).toJson,
+          Map("role" -> "NEW_ROLE").toJson)) {
+          Post(s"/users/$NORMAL1", badInput).addHeader(authHeaderFor(ADMIN1)) ~>
+            routesService.routes ~> check {
+            assert(status.intValue() == 400, badInput)
+            status.intValue should equal(400)
+            val result = responseAs[Result[Unit]]
+            result.success should be(false)
+            result.errors.get should be(List(Error(ErrorCodes.BAD_SCHEMA)))
+          }
+        }
+      }
+    }
+
+    scenario("email not found") {
+      withUsers {
+        Post(s"/users/idontexist@bla.com", ChangeUserData.create("newpassword", "newpassword")).addHeader(authHeaderFor(ADMIN1)) ~>
           routesService.routes ~> check {
           status.intValue should equal(404)
           responseAs[Result[UserView]] should have(

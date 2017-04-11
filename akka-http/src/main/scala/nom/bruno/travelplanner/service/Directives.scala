@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server.{Directive1, Rejection, Route}
 import akka.http.scaladsl.unmarshalling.FromRequestUnmarshaller
 import nom.bruno.travelplanner.Tables.User
-import nom.bruno.travelplanner.repositories.SessionsRepository
 import nom.bruno.travelplanner.services.UsersService
 import nom.bruno.travelplanner.{Error, ErrorCodes}
 
