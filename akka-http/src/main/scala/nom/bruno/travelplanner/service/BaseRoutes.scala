@@ -30,11 +30,13 @@ trait BaseRoutes extends JsonProtocol {
 class AllRoutes @Inject()(
                            userRoutes: UserRoutes,
                            logoutRoute: LogoutRoute,
-                           loginRoute: LoginRoute
+                           loginRoute: LoginRoute,
+                           tripRoutes: TripRoutes
                          ) extends BaseRoutes {
   def routes = handleRejections(rejectionHandler) {
     userRoutes.routes ~
       logoutRoute.routes ~
-      loginRoute.routes
+      loginRoute.routes ~
+      tripRoutes.routes
   }
 }

@@ -12,7 +12,7 @@ class LogoutRoute @Inject()(val usersService: UsersService)
                            (@Named("EC") implicit val ec: ExecutionContext)
   extends BaseRoutes {
   override def routes: Route = {
-    (pathPrefix("logout") & post) {
+    (path("logout") & post) {
       optionalCookie("X-Session-Id") {
         case Some(cookiePair) => complete {
           usersService.finishSession(cookiePair.value) map { _ =>

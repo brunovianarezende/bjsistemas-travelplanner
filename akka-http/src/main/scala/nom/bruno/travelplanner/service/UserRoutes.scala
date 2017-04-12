@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 class UserRoutes @Inject()(val validationService: ValidationService)
                           (@Named("EC") implicit val ec: ExecutionContext, implicit val usersService: UsersService)
   extends BaseRoutes {
-  def routes = pathPrefix("users" / """.+""".r) { email =>
+  def routes = path("users" / Segment) { email =>
     put {
       entityTP(as[NewUserData]) {
         newUserData =>

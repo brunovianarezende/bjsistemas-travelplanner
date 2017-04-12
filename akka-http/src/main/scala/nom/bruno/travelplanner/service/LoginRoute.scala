@@ -17,7 +17,7 @@ class LoginRoute @Inject()(val usersService: UsersService)
                           (@Named("EC") implicit val ec: ExecutionContext)
   extends BaseRoutes {
   override def routes: Route = {
-    (pathPrefix("login") & post) {
+    (path("login") & post) {
       entityTP(as[LoginData]) { loginData =>
         onSuccess(usersService.loginUser(loginData.email, loginData.password)) {
           case Some(sessionId) => setCookie(HttpCookie(name = "X-Session-Id", value = sessionId)) {

@@ -17,7 +17,7 @@ class SerializationTests extends FunSpec {
     it("must correctly serialize roles") {
       assert(write(ChangeUserData.create(Role.NORMAL)) == "{\"role\":\"NORMAL\"}")
     }
-    it("must throw an exception for invalid roles") {
+    it("must throw an exception for invalid roles instead of ignoring the role") {
       assertThrows[MappingException] {
         parse("{\"role\": \"BLABLA\"}").extract[ChangeUserData]
       }
