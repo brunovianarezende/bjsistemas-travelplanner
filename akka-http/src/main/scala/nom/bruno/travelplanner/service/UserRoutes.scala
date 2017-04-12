@@ -52,7 +52,7 @@ class UserRoutes @Inject()(val validationService: ValidationService)
                 case Left(error) if forbiddenErrors contains error.code => halt(StatusCodes.Forbidden, error)
                 case Left(error) => halt(StatusCodes.BadRequest, error)
                 case Right(userToChange) => {
-                  usersService.updateUser(userToChange, changeUserData.password, changeUserData.role) map (_ => Ok())
+                  usersService.updateUser(userToChange, changeUserData.password, changeUserData.role) map (_ => Ok)
                 }
               }
             }
@@ -68,7 +68,7 @@ class UserRoutes @Inject()(val validationService: ValidationService)
               case Left(error) if error.code == ErrorCodes.INVALID_USER => halt(StatusCodes.NotFound, error)
               case Left(error) => halt(StatusCodes.Forbidden, error)
               case Right(userToDelete) => {
-                usersService.deleteUser(userToDelete) map (_ => Ok())
+                usersService.deleteUser(userToDelete) map (_ => Ok)
               }
             }
           }

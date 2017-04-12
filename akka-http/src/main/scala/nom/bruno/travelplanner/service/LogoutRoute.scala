@@ -16,7 +16,7 @@ class LogoutRoute @Inject()(val usersService: UsersService)
       optionalCookie("X-Session-Id") {
         case Some(cookiePair) => complete {
           usersService.finishSession(cookiePair.value) map { _ =>
-            Ok()
+            Ok
           }
         }
         case _ =>
