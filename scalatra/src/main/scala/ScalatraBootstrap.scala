@@ -15,7 +15,7 @@ class ScalatraBootstrap extends LifeCycle {
 
   var db: DatabaseDef = _
 
-  override def init(context: ServletContext) {
+  override def init(context: ServletContext): Unit = {
     logger.info("Creating db connection")
     db = Database.forConfig("mysql")
 
@@ -38,7 +38,7 @@ class ScalatraBootstrap extends LifeCycle {
     db.close()
   }
 
-  override def destroy(context: ServletContext) {
+  override def destroy(context: ServletContext): Unit = {
     super.destroy(context)
     closeDbConnection
   }
