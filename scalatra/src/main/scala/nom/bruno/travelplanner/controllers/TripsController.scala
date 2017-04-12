@@ -8,7 +8,7 @@ import org.scalatra.AsyncResult
 
 import scala.util.{Success, Try}
 import scalaz.OptionT
-import scalaz.Scalaz._
+import scalaz.std.scalaFuture._
 
 class TripsController @Inject()(val tripsService: TripsService, val usersService: UsersService)
   extends TravelPlannerStack with AuthenticationSupport {
@@ -28,7 +28,7 @@ class TripsController @Inject()(val tripsService: TripsService, val usersService
           Try(tripIdStr.toInt) match {
             case Success(tripId) => {
               (for {
-                user <- OptionT(usersService.getUser(email)) if authUser.canSeeTripsFrom(user)
+                user <- OptionT(usersService.getUser(email)).filter(authUser.canSeeTripsFrom(_))
                 trip <- OptionT(tripsService.getUserTrip(user, tripId))
               }
                 yield {
