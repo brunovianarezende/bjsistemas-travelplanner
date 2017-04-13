@@ -53,7 +53,7 @@ val commonSettings = Seq(
 lazy val baseTravelPlanner = (project in file("."))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
-  .aggregate(api, apiIntegration, scalatra, scalatraIntegration, akkaHttp)
+  .aggregate(api, apiIntegration, scalatra, scalatraIntegration, akkaHttp, akkaHttpIntegration)
 
 lazy val commonResources = (project in file("commonResources"))
   .disablePlugins(RevolverPlugin)
@@ -98,5 +98,14 @@ lazy val akkaHttp = (project in file("akka-http"))
   .settings(logDependencies)
   .dependsOn(commonResources)
   .dependsOn(api)
+
+lazy val akkaHttpIntegration = (project in file("akka-httpIntegration"))
+  .disablePlugins(RevolverPlugin)
+  .settings(
+    parallelExecution in Test := false
+  )
+  .settings(commonSettings: _*)
+  .dependsOn(akkaHttp % "compile->compile;test->test")
+  .dependsOn(commonResources % "test->test")
 
 onLoad in Global := (onLoad in Global).value andThen (Command.process("project scalatra", _))
