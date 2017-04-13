@@ -53,6 +53,7 @@ val commonSettings = Seq(
 lazy val baseTravelPlanner = (project in file("."))
   .disablePlugins(RevolverPlugin)
   .settings(commonSettings: _*)
+  .settings(addCommandAlias("test", ";api/test;scalatra/test;akkaHttp/test;apiIntegration/test;scalatraIntegration/test;akkaHttpIntegration/test"): _*)
   .aggregate(api, apiIntegration, scalatra, scalatraIntegration, akkaHttp, akkaHttpIntegration)
 
 lazy val commonResources = (project in file("commonResources"))
